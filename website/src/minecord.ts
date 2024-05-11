@@ -195,6 +195,9 @@ peers.createPeer = createCharacter
 
 peers.onPeerJoin = (id) => {
     const peer = peers.getPeerById(id)
+    if (!peer) return
+    peer.userData ||= {}
+    peer.userData.id = id
 
     // setTimeout(() => {
     //     chat.onChat({
@@ -303,18 +306,10 @@ export async function start() {
     })
     world.time = 0.5 * 24_000
 
-    const voiceChatInstance = voiceChat()
+    await voiceChat()
 
     events.on('stuff', (payload) => {
         console.log('stuff', payload)
     })
     events.emit('stuff', 'hello')
-
-    voiceChatInstance.start()
-
-    return () => {
-        world.remove()
-        network.disconnect()
-        voiceChatInstance.disconnect()
-    }
 }

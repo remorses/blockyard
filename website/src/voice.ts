@@ -1,136 +1,77 @@
 import { Peers } from '@voxelize/core'
 
-import SimplePeer, { SimplePeer as SimplePeerType } from 'simple-peer'
+import { Peer } from 'peerjs'
 import { voxelizeState } from '~/minecord'
 
-const peersRef: Record<string, SimplePeer.Instance> = {}
+const peersRef: Record<string, Peer> = {}
 const audioElementsRef = {}
-
-export function voiceChat() {
+let hostPeerId = 'minecord-host'
+export async function voiceChat() {
     const { peers } = voxelizeState
 
     const clients = peers.children
-    const clientId = peers.ownID
+    const clientId = peers.ownID.replace(/[-_]/g, '')
+
+    const isInitializer = window.location.hash === '#init'
+    const peer = new Peer(isInitializer ? hostPeerId : clientId, {})
+
+    const conn = peer.connect(hostPeerId)
 
     const { events } = voxelizeState
-    events.on('signal', (payload) => {
-        const clientId = peers.ownID
-        console.log('signal', { payload })
-        if (!payload) {
-            console.error('No payload in signal')
-            return
-        }
-        const { senderId, signal } = JSON.parse(payload)
-        if (senderId === clientId) return
 
-        const initiator = clientId > senderId
-
-        if (!peersRef[senderId]) {
-            createPeerConnection(senderId, initiator)
-        }
-
-        peersRef[senderId].signal(signal)
+    peer.on('open', (id) => {
+        console.log('My peer ID is: ' + id)
+    })
+    peer.on('error', (error) => {
+        console.error('[peerjs error]', error)
     })
 
-    const createPeerConnection = (targetId, initiator) => {
-        if (peersRef[targetId]) return
-
-        const peer = new SimplePeer({
-            initiator,
-            trickle: false,
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                ],
-            },
+    // Handle incoming data connection
+    peer.on('connection', (conn) => {
+        console.log('incoming peer connection!')
+        conn.on('data', (data) => {
+            console.log(`received: ${data}`)
         })
-
-        peer.on('error', (err) =>
-            console.error('Error in peer connection:', err),
-        )
-
-        peer.on('signal', (signal) => {
-            voxelizeState.events.emit('signal', {
-                targetId,
-                test: ' dd',
-                senderId: clientId,
-                signal,
-            })
+        conn.on('open', () => {
+            conn.send('hello!')
         })
+    })
+    const onStream = (mediaStream) => {
+        const audio = new Audio()
+        audio.autoplay = true
+        // audio.muted = remoteAudioMuted[targetId]
+        audio.srcObject = mediaStream
+        audio.play()
 
-        peer.on('connect', () => console.log(`Connected to ${targetId}`))
-
-        peer.on('track', (track, stream) => {
-            console.log(`Received ${track.kind} track from ${targetId}`)
-            track.onunmute = () => {
-                const audio = new Audio()
-                audio.autoplay = true
-                // audio.muted = remoteAudioMuted[targetId]
-                audio.srcObject = stream
-                audio.play()
-                audioElementsRef[targetId] = audio
-            }
+        // audioElementsRef[call.peer] = audio
+    }
+    if (!isInitializer) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
         })
+        const call = peer.call(hostPeerId, stream)
+        call.on('stream', onStream)
+    }
 
-        peer.on('close', () => {
-            console.log(`Disconnected from ${targetId}`)
-            peer.destroy()
-            delete peersRef[targetId]
-            if (audioElementsRef[targetId]) {
-                audioElementsRef[targetId].pause()
-                audioElementsRef[targetId].srcObject = null
-                delete audioElementsRef[targetId]
-            }
-        })
-
+    peer.on('call', (call) => {
         navigator.mediaDevices
-            .getUserMedia({ audio: true })
+            .getUserMedia({ video: true, audio: true })
             .then((stream) => {
-                if (!peer.destroyed) {
-                    peer.addStream(stream)
-                }
+                call.answer(stream) // Answer the call with an A/V stream.
+                call.on('stream', onStream)
             })
-            .catch((error) => {
-                console.error('Error getting user media:', error)
+            .catch((err) => {
+                console.error('Failed to get local stream', err)
             })
-
-        peersRef[targetId] = peer
-    }
-
-    // useEffect(() => {
-    //     const updatedRemoteAudioMuted = {}
-    //     for (const id in clients) {
-    //         if (id !== clientId) {
-    //             updatedRemoteAudioMuted[id] = !clients[id]?.microphone
-    //         }
-    //     }
-    //     setRemoteAudioMuted(updatedRemoteAudioMuted)
-    // }, [clientId, clients])
-
-    const start = () => {
-        if (!clientId) {
-            console.error('Client ID not found')
-            return
+    })
+    peer.on('close', () => {
+        const targetId = peer.id
+        peer.destroy()
+        delete peersRef[targetId]
+        if (audioElementsRef[targetId]) {
+            audioElementsRef[targetId].pause()
+            audioElementsRef[targetId].srcObject = null
+            delete audioElementsRef[targetId]
         }
-
-        for (const id in clients) {
-            if (id !== clientId) {
-                const shouldInitiateConnection = clientId > id
-                createPeerConnection(id, shouldInitiateConnection)
-            }
-        }
-    }
-
-    return {
-        start: start,
-        disconnect: () => {
-            for (const id in audioElementsRef) {
-                if (audioElementsRef[id]) {
-                    audioElementsRef[id].pause()
-                    audioElementsRef[id].srcObject = null
-                }
-            }
-        },
-    }
+    })
 }

@@ -28,12 +28,13 @@ async fn main() -> std::io::Result<()> {
             .events_mut()
             .dispatch(Event::new(signal_event).payload(payload).build());
     });
+    
 
     let mut registry = Registry::new();
     registry.register_blocks(&[dirt, stone, grass_block]);
 
     let mut server = Server::new().port(4000).registry(&registry).build();
-
+    
     server
         .add_world(world)
         .expect("Failed to add world to server");
