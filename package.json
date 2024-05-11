@@ -5,6 +5,8 @@
         "test": "NODE_ENV=test vitest",
         "watch": "pnpm -r watch",
         "build": "pnpm -r build",
+        "server:dev": "cd server && cargo watch -w src -x \"run --release\"",
+
         "release": "pnpm build && changeset"
     },
     "devDependencies": {

@@ -1,3 +1,4 @@
+target
 node_modules
 dist
 esm
@@ -5,3 +6,4 @@ esm
 *.tsbuildinfo
 .ultra.cache.json
 coverage
+server/world
