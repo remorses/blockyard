@@ -4,8 +4,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "build:dev": "doppler run -c dev -- remix vite:build",
     "build": "remix vite:build",
-    "dev": "remix vite:dev",
+    "dev": "doppler run -- remix vite:dev",
     "fly": "fly -a minecord-website ",
     "deployment": "tsx scripts/deploy.ts",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
@@ -26,7 +27,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "simple-peer": "^9.11.1",
-    "three": "^0.158.0"
+    "three": "^0.158.0",
+    "vite-plugin-node-polyfills": "^0.21.0"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.9.2",

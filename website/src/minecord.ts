@@ -284,7 +284,9 @@ export const voxelizeState = {
 export async function start() {
     animate()
 
-    await network.connect('http://localhost:4000')
+    await network.connect(
+        process.env.PUBLIC_SERVER_URL || 'http://localhost:4000',
+    )
     await network.join('tutorial')
 
     await world.initialize()

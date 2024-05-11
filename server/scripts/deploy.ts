@@ -14,6 +14,7 @@ async function main() {
         appName: 'minecord-rust-server',
         port: 4000,
         dockerfile: 'Dockerfile',
+        minInstances: 1,
         regions: ['iad'],
     })
 }
