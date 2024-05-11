@@ -1,5 +1,6 @@
 {
     "scripts": {
-        "deployment": "pnpm tsx scripts/deploy.ts"
+        "deployment": "pnpm tsx scripts/deploy.ts",
+        "fly": "fly -a minecord-rust-server"
     }
 }

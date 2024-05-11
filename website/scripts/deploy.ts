@@ -8,6 +8,7 @@ async function main() {
         appName: 'minecord-website',
         port: 3000,
         dockerfile: 'Dockerfile',
+        healthCheckPath: '/health',
         regions: ['iad'],
     })
 }
