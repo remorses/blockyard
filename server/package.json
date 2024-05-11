@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "deployment": "pnpm tsx scripts/deploy.ts"
+    }
+}

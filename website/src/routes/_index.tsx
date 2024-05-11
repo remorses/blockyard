@@ -1,6 +1,8 @@
 import '../style.css'
+import { useSyncExternalStore } from 'react'
 import type { MetaFunction } from '@remix-run/node'
 import { useEffect } from 'react'
+import { MineCord } from '~/components/MineCord.client'
 
 export const meta: MetaFunction = () => {
     return [
@@ -8,22 +10,19 @@ export const meta: MetaFunction = () => {
         { name: 'description', content: 'Welcome to Remix!' },
     ]
 }
-let started = false
 
-export default function Index() {
-    useEffect(() => {
-        Promise.resolve().then(async () => {
-            const { start } = await import('../minecord')
-            if (!started) {
-                start()
-                started = true
-            }
-        })
-    }, [])
-    return (
-        <div id='app'>
-            <canvas id='canvas'></canvas>
-            <div id='crosshair' />
-        </div>
+const sub = () => {
+    return () => {}
+}
+export default function Page() {
+    const isClient = useSyncExternalStore(
+        sub,
+        () => true,
+        () => false,
     )
+    if (isClient) {
+        return <MineCord />
+    } else {
+        return null
+    }
 }

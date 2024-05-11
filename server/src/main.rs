@@ -1,4 +1,4 @@
-use voxelize::{Block, FlatlandStage, Registry, Server, Voxelize, World, WorldConfig};
+use voxelize::{Block, Event, FlatlandStage, Registry, Server, Voxelize, World, WorldConfig};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -9,7 +9,6 @@ async fn main() -> std::io::Result<()> {
     let config = WorldConfig::new().save_dir("./world").saving(true).build();
 
     let mut world = World::new("tutorial", &config);
-    
 
     {
         let mut pipeline = world.pipeline_mut();
@@ -21,6 +20,15 @@ async fn main() -> std::io::Result<()> {
         )
     }
 
+    let signal_event = "signal";
+    world.set_event_handle(signal_event, |world, _, payload| {
+        // log the payload
+        println!("{:?}", payload);
+        world
+            .events_mut()
+            .dispatch(Event::new(signal_event).payload(payload).build());
+    });
+
     let mut registry = Registry::new();
     registry.register_blocks(&[dirt, stone, grass_block]);
 
@@ -29,7 +37,6 @@ async fn main() -> std::io::Result<()> {
     server
         .add_world(world)
         .expect("Failed to add world to server");
-    
 
     Voxelize::run(server).await
 }

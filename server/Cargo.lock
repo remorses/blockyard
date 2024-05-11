@@ -1907,6 +1907,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "specs",
+ "voxelize",
+]
+
+[[package]]
 name = "sha1"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2306,15 +2315,6 @@ dependencies = [
  "serde_json",
  "specs",
  "splines",
-]
-
-[[package]]
-name = "voxelize-tutorial"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "specs",
- "voxelize",
 ]
 
 [[package]]

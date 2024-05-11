@@ -6,11 +6,11 @@
         "watch": "pnpm -r watch",
         "build": "pnpm -r build",
         "server:dev": "cd server && cargo watch -w src -x \"run --release\"",
-
         "release": "pnpm build && changeset"
     },
     "devDependencies": {
         "@changesets/cli": "^2.27.1",
+        "@xmorse/deployment-utils": "^0.1.2",
         "prettier": "^3.2.5",
         "tsx": "^4.7.2",
         "typescript": "^5.4.5",

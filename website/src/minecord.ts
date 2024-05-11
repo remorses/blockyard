@@ -5,6 +5,7 @@ import { GUI } from 'lil-gui'
 import * as THREE from 'three'
 
 import '@voxelize/core/dist/styles.css'
+import { voiceChat } from '~/voice'
 
 const canvas = document.getElementById('canvas')
 
@@ -192,6 +193,24 @@ const peers = new VOXELIZE.Peers(rigidControls.object)
 
 peers.createPeer = createCharacter
 
+peers.onPeerJoin = (id) => {
+    const peer = peers.getPeerById(id)
+
+    // setTimeout(() => {
+    //     chat.onChat({
+    //         type: 'system',
+    //         body: `${peer.nametag.text} $${grayReplacement}$has joined the game`,
+    //     })
+    //     // some arbitrary number to wait until nametag is stable
+    // }, 1000)
+}
+
+peers.onPeerLeave = (_, peer) => {
+    // chat.onChat({
+    //     type: 'system',
+    //     body: `${peer.nametag.text} $${grayReplacement}$has left the game`,
+    // })
+}
 peers.onPeerUpdate = (peer, data) => {
     ;(peer as any).set(data.position, data.direction)
 }
@@ -218,6 +237,10 @@ inputs.bind('j', debug.toggle)
 const network = new VOXELIZE.Network()
 
 network.register(world).register(peers)
+
+const events = new VOXELIZE.Events()
+
+network.register(events)
 
 /* -------------------------------------------------------------------------- */
 /*                               MAIN GAME LOOPS                              */
@@ -250,6 +273,14 @@ function animate() {
     network.flush()
 }
 
+export const voxelizeState = {
+    world,
+    network,
+    peers,
+    events,
+    mainCharacter,
+}
+
 export async function start() {
     animate()
 
@@ -270,8 +301,18 @@ export async function start() {
     })
     world.time = 0.5 * 24_000
 
+    const voiceChatInstance = voiceChat()
+
+    events.on('stuff', (payload) => {
+        console.log('stuff', payload)
+    })
+    events.emit('stuff', 'hello')
+
+    voiceChatInstance.start()
+
     return () => {
         world.remove()
         network.disconnect()
+        voiceChatInstance.disconnect()
     }
 }
