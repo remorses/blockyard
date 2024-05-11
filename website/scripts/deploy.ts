@@ -20,6 +20,7 @@ async function main() {
         dockerfile: 'Dockerfile',
         minInstances: 1,
         healthCheckPath: '/health',
+        memorySize: '512mb',
         regions: ['iad'],
     })
 }
