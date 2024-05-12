@@ -1911,6 +1911,13 @@ name = "server"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "kdtree",
+ "log",
+ "nanoid",
+ "noise",
+ "rayon",
+ "serde",
+ "serde_json",
  "specs",
  "voxelize",
 ]

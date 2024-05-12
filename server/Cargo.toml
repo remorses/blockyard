@@ -7,7 +7,12 @@ edition = "2021"
 voxelize = "0.8.88"
 actix-web = "4.4.0"
 specs = { version = "0.20.0", features = ["specs-derive", "serde"] }
-
-
+serde = { version = "1.0.198", features = ["derive"] }
+serde_json = "1.0.116"
+noise = "0.9.0"
+nanoid = "0.4.0"
+kdtree = "0.7.0"
+rayon = "1.10.0"
+log = "0.4.21"
 # [target.x86_64-unknown-linux-gnu]
 # linker = "x86_64-linux-musl-gcc"

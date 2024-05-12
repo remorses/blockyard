@@ -1,4 +1,7 @@
 use voxelize::{Block, Event, FlatlandStage, Registry, Server, Voxelize, World, WorldConfig};
+mod worlds;
+
+use worlds::terrain::{setup_terrain_world};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -20,23 +23,13 @@ async fn main() -> std::io::Result<()> {
         )
     }
 
-    let signal_event = "signal";
-    world.set_event_handle(signal_event, |world, _, payload| {
-        // log the payload
-        println!("{:?}", payload);
-        world
-            .events_mut()
-            .dispatch(Event::new(signal_event).payload(payload).build());
-    });
-    
-
     let mut registry = Registry::new();
     registry.register_blocks(&[dirt, stone, grass_block]);
 
     let mut server = Server::new().port(4000).registry(&registry).build();
-    
+
     server
-        .add_world(world)
+        .add_world(setup_terrain_world())
         .expect("Failed to add world to server");
 
     Voxelize::run(server).await
