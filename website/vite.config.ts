@@ -26,6 +26,7 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
 
     return {
         define,
+
         ssr: {
             noExternal: building ? true : undefined,
         },

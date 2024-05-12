@@ -288,7 +288,7 @@ export async function start() {
     animate()
 
     await network.connect(
-        process.env.PUBLIC_SERVER_URL || 'http://localhost:4000',
+        process.env.PUBLIC_SERVER_URL || 'https://minecord-rust-server.fly.dev',
     )
     await network.join('tutorial')
 

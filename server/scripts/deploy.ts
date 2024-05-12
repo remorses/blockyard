@@ -15,7 +15,7 @@ async function main() {
         port: 4000,
         dockerfile: 'Dockerfile',
         minInstances: 1,
-
+        maxInstances: 1,
         memorySize: '1gb',
         regions: ['iad'],
     })

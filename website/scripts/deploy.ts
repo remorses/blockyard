@@ -19,6 +19,7 @@ async function main() {
         port: 3000,
         dockerfile: 'Dockerfile',
         minInstances: 1,
+        maxInstances: 1,
         healthCheckPath: '/health',
         memorySize: '512mb',
         regions: ['iad'],
