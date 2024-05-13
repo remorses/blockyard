@@ -15,6 +15,7 @@ export function getSupabaseWithHeaders({ request }: { request: Request }) {
         env.PUBLIC_SUPABASE_URL!,
         env.PUBLIC_SUPABASE_ANON_KEY!,
         {
+            // jwtSecret: process.env.SUPABASE_JWT_SECRET,
             cookies: {
                 get(key) {
                     return cookies[key]
@@ -44,10 +45,18 @@ export async function getSupabaseWithSessionHeaders({
     const { supabase, headers } = getSupabaseWithHeaders({
         request,
     })
-    const {
-        data: { session },
-    } = await supabase.auth.getSession()
-    const userId = session?.user?.id as string
+    const [
+        {
+            data: { session },
+        },
+        {
+            data: { user },
+        },
+    ] = await Promise.all([
+        supabase.auth.getSession(), //
+        supabase.auth.getUser(),
+    ])
+    const userId = user?.id as string
     let redirectTo: Response | undefined
     if (!userId) {
         redirectTo = redirect('/login', { headers })
