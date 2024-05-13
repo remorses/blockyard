@@ -1,0 +1,38 @@
+{
+    "name": "db",
+    "version": "0.0.0",
+    "private": true,
+    "description": "db",
+    "scripts": {
+        "studio": "doppler run -- prisma studio",
+        "gen:kysely": "doppler run -- kysely-codegen --out-file kysely.types.ts",
+        "diff:prod": "doppler run -c production --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
+        "diff:preview": "doppler run -c preview --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
+        "push:diff": "doppler run --command 'psql \"$DIRECT_URL\" -a -f diff.sql'",
+        "dump:prod": "doppler run -c production --command 'pnpm supabase --db-url $DIRECT_URL db dump --schema auth -f dump.sql'",
+        "fix-permissions": "doppler run -- tsx scripts/fix-permissions.ts",
+        "fix-permissions:prod": "doppler run -c production -- tsx scripts/fix-permissions.ts",
+        "gen:supabase": "doppler run --command 'pnpm supabase gen types typescript --db-url $DATABASE_URL > supabase.types.ts'",
+        "push": "doppler run -c dev --command 'prisma db push && pnpm fix-permissions && pnpm gen:kysely'",
+        "push:prod": "doppler run -c production -- prisma db push && prisma generate",
+        "pull": "doppler run -c dev -- prisma db pull && prisma generate",
+        "postinstall": "prisma generate",
+        "pull:prod": "doppler run -c production -- prisma db pull --schemas auth"
+    },
+    "keywords": [],
+    "author": "remorses <beats.by.morse@gmail.com>",
+    "license": "ISC",
+    "dependencies": {
+        "@prisma/client": "^5.13.0",
+        "@supabase/supabase-js": "^2.43.1",
+        "kysely": "^0.27.3",
+        "kysely-codegen": "^0.15.0",
+        "pg": "^8.11.3",
+        "postgres": "^3.3.4",
+        "prisma": "^5.13.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.13",
+        "supabase": "^1.165.0"
+    }
+}
