@@ -101,8 +101,9 @@ export default function Page() {
     const actionData = useActionData<typeof action>()
     const {
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isSubmitting },
         register,
+
         control,
     } = useRemixForm<z.infer<typeof schema>>({
         resolver,
@@ -117,6 +118,7 @@ export default function Page() {
             >
                 <Button
                     type='submit'
+                    isLoading={isSubmitting}
                     {...register('option', { value: 'create' })}
                 >
                     Create World
