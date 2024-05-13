@@ -68,23 +68,24 @@ export async function action({ request }: ActionFunctionArgs) {
             orgId,
         },
     })
+    return redirect(`/world/${world.id}`, { headers })
     return json({
         receivedValues,
         world,
         data,
-        errors: { worldName: 'errore' },
     })
 }
 
 export let loader = async ({ request, params }: LoaderFunctionArgs) => {
     const { worldId: worldId } = params
     console.log('Incoming params ', params)
-    const { supabase, headers, session } = await getSupabaseWithSessionHeaders({
-        request,
-    })
+    const { supabase, headers, redirectTo, session } =
+        await getSupabaseWithSessionHeaders({
+            request,
+        })
 
-    if (!session) {
-        return redirect('/login', { headers })
+    if (redirectTo) {
+        return redirectTo
     }
 
     return json(

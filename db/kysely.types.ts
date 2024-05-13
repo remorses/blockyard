@@ -8,6 +8,8 @@ export type AuthFactorStatus = "unverified" | "verified";
 
 export type AuthFactorType = "totp" | "webauthn";
 
+export type AuthOneTimeTokenType = "confirmation_token" | "email_change_token_current" | "email_change_token_new" | "phone_change_token" | "reauthentication_token" | "recovery_token";
+
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
@@ -104,6 +106,16 @@ export interface AuthMfaFactors {
   secret: string | null;
   status: AuthFactorStatus;
   updated_at: Timestamp;
+  user_id: string;
+}
+
+export interface AuthOneTimeTokens {
+  created_at: Generated<Timestamp>;
+  id: string;
+  relates_to: string;
+  token_hash: string;
+  token_type: AuthOneTimeTokenType;
+  updated_at: Generated<Timestamp>;
   user_id: string;
 }
 
@@ -508,6 +520,7 @@ export interface DB {
   "auth.mfa_amr_claims": AuthMfaAmrClaims;
   "auth.mfa_challenges": AuthMfaChallenges;
   "auth.mfa_factors": AuthMfaFactors;
+  "auth.one_time_tokens": AuthOneTimeTokens;
   "auth.refresh_tokens": AuthRefreshTokens;
   "auth.saml_providers": AuthSamlProviders;
   "auth.saml_relay_states": AuthSamlRelayStates;
