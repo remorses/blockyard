@@ -51,13 +51,12 @@ model instances {
 }
 
 model mfa_amr_claims {
-  session_id            String    @db.Uuid
-  created_at            DateTime  @db.Timestamptz(6)
-  updated_at            DateTime  @db.Timestamptz(6)
+  session_id            String   @db.Uuid
+  created_at            DateTime @db.Timestamptz(6)
+  updated_at            DateTime @db.Timestamptz(6)
   authentication_method String
-  id                    String    @id(map: "amr_id_pk") @db.Uuid
-  sessionsId            String?   @db.Uuid
-  sessions              sessions? @relation(fields: [sessionsId], references: [id])
+  id                    String   @id(map: "amr_id_pk") @db.Uuid
+  sessions              sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([session_id, authentication_method], map: "mfa_amr_claims_session_id_authentication_method_pkey")
   @@schema("auth")
@@ -203,46 +202,46 @@ model sso_providers {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model users {
-  instance_id                 String?        @db.Uuid
-  id                          String         @id @db.Uuid
-  aud                         String?        @db.VarChar(255)
-  role                        String?        @db.VarChar(255)
-  email                       String?        @db.VarChar(255)
-  encrypted_password          String?        @db.VarChar(255)
-  email_confirmed_at          DateTime?      @db.Timestamptz(6)
-  invited_at                  DateTime?      @db.Timestamptz(6)
-  confirmation_token          String?        @db.VarChar(255)
-  confirmation_sent_at        DateTime?      @db.Timestamptz(6)
-  recovery_token              String?        @db.VarChar(255)
-  recovery_sent_at            DateTime?      @db.Timestamptz(6)
-  email_change_token_new      String?        @db.VarChar(255)
-  email_change                String?        @db.VarChar(255)
-  email_change_sent_at        DateTime?      @db.Timestamptz(6)
-  last_sign_in_at             DateTime?      @db.Timestamptz(6)
+  instance_id                 String?       @db.Uuid
+  id                          String        @id @db.Uuid
+  aud                         String?       @db.VarChar(255)
+  role                        String?       @db.VarChar(255)
+  email                       String?       @db.VarChar(255)
+  encrypted_password          String?       @db.VarChar(255)
+  email_confirmed_at          DateTime?     @db.Timestamptz(6)
+  invited_at                  DateTime?     @db.Timestamptz(6)
+  confirmation_token          String?       @db.VarChar(255)
+  confirmation_sent_at        DateTime?     @db.Timestamptz(6)
+  recovery_token              String?       @db.VarChar(255)
+  recovery_sent_at            DateTime?     @db.Timestamptz(6)
+  email_change_token_new      String?       @db.VarChar(255)
+  email_change                String?       @db.VarChar(255)
+  email_change_sent_at        DateTime?     @db.Timestamptz(6)
+  last_sign_in_at             DateTime?     @db.Timestamptz(6)
   raw_app_meta_data           Json?
   raw_user_meta_data          Json?
   is_super_admin              Boolean?
-  created_at                  DateTime?      @db.Timestamptz(6)
-  updated_at                  DateTime?      @db.Timestamptz(6)
-  phone                       String?        @unique
-  phone_confirmed_at          DateTime?      @db.Timestamptz(6)
-  phone_change                String?        @default("")
-  phone_change_token          String?        @default("") @db.VarChar(255)
-  phone_change_sent_at        DateTime?      @db.Timestamptz(6)
-  confirmed_at                DateTime?      @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
-  email_change_token_current  String?        @default("") @db.VarChar(255)
-  email_change_confirm_status Int?           @default(0) @db.SmallInt
-  banned_until                DateTime?      @db.Timestamptz(6)
-  reauthentication_token      String?        @default("") @db.VarChar(255)
-  reauthentication_sent_at    DateTime?      @db.Timestamptz(6)
-  is_sso_user                 Boolean        @default(false)
-  deleted_at                  DateTime?      @db.Timestamptz(6)
-  is_anonymous                Boolean        @default(false)
+  created_at                  DateTime?     @db.Timestamptz(6)
+  updated_at                  DateTime?     @db.Timestamptz(6)
+  phone                       String?       @unique
+  phone_confirmed_at          DateTime?     @db.Timestamptz(6)
+  phone_change                String?       @default("")
+  phone_change_token          String?       @default("") @db.VarChar(255)
+  phone_change_sent_at        DateTime?     @db.Timestamptz(6)
+  confirmed_at                DateTime?     @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
+  email_change_token_current  String?       @default("") @db.VarChar(255)
+  email_change_confirm_status Int?          @default(0) @db.SmallInt
+  banned_until                DateTime?     @db.Timestamptz(6)
+  reauthentication_token      String?       @default("") @db.VarChar(255)
+  reauthentication_sent_at    DateTime?     @db.Timestamptz(6)
+  is_sso_user                 Boolean       @default(false)
+  deleted_at                  DateTime?     @db.Timestamptz(6)
+  is_anonymous                Boolean       @default(false)
   identities                  identities[]
   mfa_factors                 mfa_factors[]
   sessions                    sessions[]
-  
-  orgsUsers                   OrgsUsers[]
+
+  orgsUsers OrgsUsers[]
 
   @@index([instance_id])
   @@index([is_anonymous])
@@ -298,22 +297,23 @@ model OrgInviteLink {
 }
 
 model Org {
-  orgId               String               @id @default(cuid())
-  name                String               @default("")
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @default(now()) @updatedAt
-  stripeCustomerId    String?
-  ssoProviderId       String?              @unique @db.Uuid
-  
-  ssoProvider         sso_providers?       @relation(fields: [ssoProviderId], references: [id], onDelete: Cascade)
-  invitationLinks     OrgInviteLink[]
-  users               OrgsUsers[]
+  orgId            String   @id @default(cuid())
+  name             String   @default("")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+  stripeCustomerId String?
+  ssoProviderId    String?  @unique @db.Uuid
+
+  ssoProvider     sso_providers?  @relation(fields: [ssoProviderId], references: [id], onDelete: Cascade)
+  invitationLinks OrgInviteLink[]
+  users           OrgsUsers[]
   // payments            PaymentForCredits[]
   // sites               Site[]
   // subscriptions       Subscription[]
 
   @@schema("public")
 }
+
 enum aal_level {
   aal1
   aal2
