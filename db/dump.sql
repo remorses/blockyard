@@ -43,6 +43,17 @@ CREATE TYPE "auth"."factor_type" AS ENUM (
 
 ALTER TYPE "auth"."factor_type" OWNER TO "supabase_auth_admin";
 
+CREATE TYPE "auth"."one_time_token_type" AS ENUM (
+    'confirmation_token',
+    'reauthentication_token',
+    'recovery_token',
+    'email_change_token_new',
+    'email_change_token_current',
+    'phone_change_token'
+);
+
+ALTER TYPE "auth"."one_time_token_type" OWNER TO "supabase_auth_admin";
+
 CREATE OR REPLACE FUNCTION "auth"."email"() RETURNS "text"
     LANGUAGE "sql" STABLE
     AS $$
@@ -200,6 +211,19 @@ CREATE TABLE IF NOT EXISTS "auth"."mfa_factors" (
 ALTER TABLE "auth"."mfa_factors" OWNER TO "supabase_auth_admin";
 
 COMMENT ON TABLE "auth"."mfa_factors" IS 'auth: stores metadata about factors';
+
+CREATE TABLE IF NOT EXISTS "auth"."one_time_tokens" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "token_type" "auth"."one_time_token_type" NOT NULL,
+    "token_hash" "text" NOT NULL,
+    "relates_to" "text" NOT NULL,
+    "created_at" timestamp without time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp without time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "one_time_tokens_token_hash_check" CHECK (("char_length"("token_hash") > 0))
+);
+
+ALTER TABLE "auth"."one_time_tokens" OWNER TO "supabase_auth_admin";
 
 CREATE TABLE IF NOT EXISTS "auth"."refresh_tokens" (
     "instance_id" "uuid",
@@ -392,6 +416,9 @@ ALTER TABLE ONLY "auth"."mfa_challenges"
 ALTER TABLE ONLY "auth"."mfa_factors"
     ADD CONSTRAINT "mfa_factors_pkey" PRIMARY KEY ("id");
 
+ALTER TABLE ONLY "auth"."one_time_tokens"
+    ADD CONSTRAINT "one_time_tokens_pkey" PRIMARY KEY ("id");
+
 ALTER TABLE ONLY "auth"."refresh_tokens"
     ADD CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id");
 
@@ -453,6 +480,12 @@ CREATE UNIQUE INDEX "mfa_factors_user_friendly_name_unique" ON "auth"."mfa_facto
 
 CREATE INDEX "mfa_factors_user_id_idx" ON "auth"."mfa_factors" USING "btree" ("user_id");
 
+CREATE INDEX "one_time_tokens_relates_to_hash_idx" ON "auth"."one_time_tokens" USING "hash" ("relates_to");
+
+CREATE INDEX "one_time_tokens_token_hash_hash_idx" ON "auth"."one_time_tokens" USING "hash" ("token_hash");
+
+CREATE UNIQUE INDEX "one_time_tokens_user_id_token_type_key" ON "auth"."one_time_tokens" USING "btree" ("user_id", "token_type");
+
 CREATE UNIQUE INDEX "reauthentication_token_idx" ON "auth"."users" USING "btree" ("reauthentication_token") WHERE (("reauthentication_token")::"text" !~ '^[0-9 ]*$'::"text");
 
 CREATE UNIQUE INDEX "recovery_token_idx" ON "auth"."users" USING "btree" ("recovery_token") WHERE (("recovery_token")::"text" !~ '^[0-9 ]*$'::"text");
@@ -509,6 +542,9 @@ ALTER TABLE ONLY "auth"."mfa_challenges"
 ALTER TABLE ONLY "auth"."mfa_factors"
     ADD CONSTRAINT "mfa_factors_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
+ALTER TABLE ONLY "auth"."one_time_tokens"
+    ADD CONSTRAINT "one_time_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
 ALTER TABLE ONLY "auth"."refresh_tokens"
     ADD CONSTRAINT "refresh_tokens_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "auth"."sessions"("id") ON DELETE CASCADE;
 
@@ -563,6 +599,9 @@ GRANT ALL ON TABLE "auth"."mfa_challenges" TO "dashboard_user";
 
 GRANT ALL ON TABLE "auth"."mfa_factors" TO "postgres";
 GRANT ALL ON TABLE "auth"."mfa_factors" TO "dashboard_user";
+
+GRANT ALL ON TABLE "auth"."one_time_tokens" TO "postgres";
+GRANT ALL ON TABLE "auth"."one_time_tokens" TO "dashboard_user";
 
 GRANT ALL ON TABLE "auth"."refresh_tokens" TO "dashboard_user";
 GRANT ALL ON TABLE "auth"."refresh_tokens" TO "postgres";
