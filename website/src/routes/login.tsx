@@ -14,15 +14,15 @@ export let loader = async ({ request }: LoaderFunctionArgs) => {
         request,
     })
 
-    if (session) {
-        return redirect('/gitposts', { headers })
-    }
-
     return json({ success: true }, { headers })
 }
 
 export default function Login() {
-    return <div className=''></div>
+    return (
+        <div className=''>
+            <LoginWithGoogle />
+        </div>
+    )
 }
 
 export function LoginWithGoogle() {
@@ -32,7 +32,7 @@ export function LoginWithGoogle() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${env.PUBLIC_URL}/auth/callback`,
+                redirectTo: `${env.PUBLIC_URL}/api/auth/callback`,
             },
         })
 

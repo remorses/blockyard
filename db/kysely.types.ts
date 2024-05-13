@@ -14,7 +14,7 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
 
 export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
-export type Json = ColumnType<JsonValue, string, string>;
+export type Json = JsonValue;
 
 export type JsonArray = JsonValue[];
 
@@ -44,6 +44,7 @@ export interface AuthAuditLogEntries {
 
 export interface AuthFlowState {
   auth_code: string;
+  auth_code_issued_at: Timestamp | null;
   authentication_method: string;
   code_challenge: string;
   code_challenge_method: AuthCodeChallengeMethod;
@@ -58,6 +59,9 @@ export interface AuthFlowState {
 
 export interface AuthIdentities {
   created_at: Timestamp | null;
+  /**
+   * Auth: Email is a generated column that references the optional email property in the identity_data
+   */
   email: Generated<string | null>;
   id: Generated<string>;
   identity_data: Json;
@@ -81,7 +85,6 @@ export interface AuthMfaAmrClaims {
   created_at: Timestamp;
   id: string;
   session_id: string;
-  sessionsId: string | null;
   updated_at: Timestamp;
 }
 
@@ -123,6 +126,7 @@ export interface AuthSamlProviders {
   id: string;
   metadata_url: string | null;
   metadata_xml: string;
+  name_id_format: string | null;
   sso_provider_id: string;
   updated_at: Timestamp | null;
 }
@@ -131,7 +135,6 @@ export interface AuthSamlRelayStates {
   created_at: Timestamp | null;
   flow_state_id: string | null;
   for_email: string | null;
-  from_ip_address: string | null;
   id: string;
   redirect_to: string | null;
   request_id: string;
@@ -149,6 +152,9 @@ export interface AuthSessions {
   factor_id: string | null;
   id: string;
   ip: string | null;
+  /**
+   * Auth: Not after is a nullable column that contains a timestamp after which the session should be regarded as expired.
+   */
   not_after: Timestamp | null;
   refreshed_at: Timestamp | null;
   tag: string | null;
@@ -168,6 +174,9 @@ export interface AuthSsoDomains {
 export interface AuthSsoProviders {
   created_at: Timestamp | null;
   id: string;
+  /**
+   * Auth: Uniquely identifies a SSO provider according to a user-chosen resource ID (case insensitive), useful in infrastructure as code.
+   */
   resource_id: string | null;
   updated_at: Timestamp | null;
 }
@@ -191,6 +200,10 @@ export interface AuthUsers {
   id: string;
   instance_id: string | null;
   invited_at: Timestamp | null;
+  is_anonymous: Generated<boolean>;
+  /**
+   * Auth: Set this column to true when the account comes from SSO. These accounts can have duplicate emails.
+   */
   is_sso_user: Generated<boolean>;
   is_super_admin: boolean | null;
   last_sign_in_at: Timestamp | null;
@@ -207,14 +220,6 @@ export interface AuthUsers {
   recovery_token: string | null;
   role: string | null;
   updated_at: Timestamp | null;
-}
-
-export interface Domain {
-  createdAt: Generated<Timestamp>;
-  domainType: "customDomain" | "internalDomain";
-  host: string;
-  id: string;
-  siteId: string;
 }
 
 export interface ExtensionsPgStatStatements {
@@ -268,67 +273,6 @@ export interface ExtensionsPgStatStatementsInfo {
   stats_reset: Timestamp | null;
 }
 
-export interface Generation {
-  chars: number;
-  createdAt: Generated<Timestamp>;
-  id: Generated<number>;
-  orgId: string;
-  words: number;
-}
-
-export interface GithubForUser {
-  accountLogin: string;
-  avatarUrl: string | null;
-  clientId: string;
-  company: string | null;
-  email: string | null;
-  name: string | null;
-  oauthToken: string;
-  userId: string;
-}
-
-export interface GithubInstallation {
-  accountAvatarUrl: Generated<string>;
-  accountLogin: Generated<string>;
-  accountType: Generated<"ORGANIZATION" | "USER">;
-  appId: string | null;
-  createdAt: Generated<Timestamp>;
-  installationId: number;
-  oauthToken: string | null;
-  orgId: string;
-  status: Generated<"active" | "suspended">;
-}
-
-export interface GithubIntegration {
-  defaultBranchName: string | null;
-  githubRepoId: string;
-  installationId: number;
-  orgId: string | null;
-  owner: string;
-  repo: string;
-  siteId: string;
-}
-
-export interface NetHttpRequestQueue {
-  body: Buffer | null;
-  headers: Json;
-  id: Generated<Int8>;
-  method: string;
-  timeout_milliseconds: number;
-  url: string;
-}
-
-export interface NetHttpResponse {
-  content: string | null;
-  content_type: string | null;
-  created: Generated<Timestamp>;
-  error_msg: string | null;
-  headers: Json | null;
-  id: Int8 | null;
-  status_code: number | null;
-  timed_out: boolean | null;
-}
-
 export interface Org {
   createdAt: Generated<Timestamp>;
   name: Generated<string>;
@@ -351,30 +295,6 @@ export interface OrgsUsers {
   orgId: string;
   role: Generated<"ADMIN" | "GUEST" | "MEMBER">;
   userId: string;
-}
-
-export interface Page {
-  branchId: string;
-  createdAt: Generated<Timestamp>;
-  document: Buffer | null;
-  lastUpdatedFrom: string | null;
-  markdown: Generated<string>;
-  pageId: string;
-  siteId: string;
-  slug: string;
-  updatedAt: Timestamp;
-}
-
-export interface PaymentForCredits {
-  createdAt: Generated<Timestamp>;
-  email: string | null;
-  id: string;
-  orderId: string;
-  orgId: string;
-  productId: string;
-  subscriptionId: string | null;
-  variantId: string;
-  variantName: string | null;
 }
 
 export interface PgsodiumDecryptedKey {
@@ -450,11 +370,24 @@ export interface PgsodiumValidKey {
   status: PgsodiumKeyStatus | null;
 }
 
+export interface RealtimeBroadcasts {
+  channel_id: Int8;
+  id: Generated<Int8>;
+  inserted_at: Timestamp;
+  updated_at: Timestamp;
+}
+
 export interface RealtimeChannels {
-  check: Generated<boolean | null>;
   id: Generated<Int8>;
   inserted_at: Timestamp;
   name: string;
+  updated_at: Timestamp;
+}
+
+export interface RealtimePresences {
+  channel_id: Int8;
+  id: Generated<Int8>;
+  inserted_at: Timestamp;
   updated_at: Timestamp;
 }
 
@@ -473,33 +406,6 @@ export interface RealtimeSubscription {
   subscription_id: string;
 }
 
-export interface Site {
-  createdAt: Generated<Timestamp>;
-  installationId: number | null;
-  name: string;
-  orgId: string;
-  siteId: string;
-}
-
-export interface SiteBranch {
-  basePath: string | null;
-  branchId: string;
-  createdAt: Generated<Timestamp>;
-  githubBranchName: string | null;
-  pagesTree: Json;
-  siteId: string;
-}
-
-export interface SiteCustomization {
-  createdAt: Generated<Timestamp>;
-  faviconUrl: string | null;
-  layout: Generated<string | null>;
-  logoImgUrlDark: string | null;
-  logoImgUrlLight: string | null;
-  primaryColor: string | null;
-  siteId: string;
-}
-
 export interface StorageBuckets {
   allowed_mime_types: string[] | null;
   avif_autodetection: Generated<boolean | null>;
@@ -507,6 +413,9 @@ export interface StorageBuckets {
   file_size_limit: Int8 | null;
   id: string;
   name: string;
+  /**
+   * Field is deprecated, use owner_id instead
+   */
   owner: string | null;
   owner_id: string | null;
   public: Generated<boolean | null>;
@@ -527,6 +436,9 @@ export interface StorageObjects {
   last_accessed_at: Generated<Timestamp | null>;
   metadata: Json | null;
   name: string | null;
+  /**
+   * Field is deprecated, use owner_id instead
+   */
   owner: string | null;
   owner_id: string | null;
   path_tokens: Generated<string[] | null>;
@@ -534,38 +446,27 @@ export interface StorageObjects {
   version: string | null;
 }
 
-export interface Subscription {
-  createdAt: Generated<Timestamp>;
-  email: string | null;
-  endsAt: Timestamp | null;
-  itemId: string | null;
-  orderId: string | null;
-  orgId: string;
-  productId: string;
-  provider: Generated<"lemonsqueezy" | "stripe">;
-  quantity: Generated<number>;
-  status: "active" | "cancelled" | "expired" | "on_trial" | "past_due" | "paused" | "unpaid";
-  subscriptionId: string;
-  variantId: string;
-  variantName: string | null;
-}
-
-export interface SupabaseFunctionsHooks {
+export interface StorageS3MultipartUploads {
+  bucket_id: string;
   created_at: Generated<Timestamp>;
-  hook_name: string;
-  hook_table_id: number;
-  id: Generated<Int8>;
-  request_id: Int8 | null;
-}
-
-export interface SupabaseFunctionsMigrations {
-  inserted_at: Generated<Timestamp>;
+  id: string;
+  in_progress_size: Generated<Int8>;
+  key: string;
+  owner_id: string | null;
+  upload_signature: string;
   version: string;
 }
 
-export interface SupabaseMigrationsSchemaMigrations {
-  name: string | null;
-  statements: string[] | null;
+export interface StorageS3MultipartUploadsParts {
+  bucket_id: string;
+  created_at: Generated<Timestamp>;
+  etag: string;
+  id: Generated<string>;
+  key: string;
+  owner_id: string | null;
+  part_number: number;
+  size: Generated<Int8>;
+  upload_id: string;
   version: string;
 }
 
@@ -592,11 +493,11 @@ export interface VaultSecrets {
   updated_at: Generated<Timestamp>;
 }
 
-export interface VectorsEmbeddings {
-  attributes: Json;
-  embedding: string | null;
+export interface World {
+  createdAt: Generated<Timestamp>;
   id: string;
-  namespace: string;
+  orgId: string;
+  updatedAt: Generated<Timestamp>;
 }
 
 export interface DB {
@@ -615,39 +516,27 @@ export interface DB {
   "auth.sso_domains": AuthSsoDomains;
   "auth.sso_providers": AuthSsoProviders;
   "auth.users": AuthUsers;
-  Domain: Domain;
   "extensions.pg_stat_statements": ExtensionsPgStatStatements;
   "extensions.pg_stat_statements_info": ExtensionsPgStatStatementsInfo;
-  Generation: Generation;
-  GithubForUser: GithubForUser;
-  GithubInstallation: GithubInstallation;
-  GithubIntegration: GithubIntegration;
-  "net._http_response": NetHttpResponse;
-  "net.http_request_queue": NetHttpRequestQueue;
   Org: Org;
   OrgInviteLink: OrgInviteLink;
   OrgsUsers: OrgsUsers;
-  Page: Page;
-  PaymentForCredits: PaymentForCredits;
   "pgsodium.decrypted_key": PgsodiumDecryptedKey;
   "pgsodium.key": PgsodiumKey;
   "pgsodium.mask_columns": PgsodiumMaskColumns;
   "pgsodium.masking_rule": PgsodiumMaskingRule;
   "pgsodium.valid_key": PgsodiumValidKey;
+  "realtime.broadcasts": RealtimeBroadcasts;
   "realtime.channels": RealtimeChannels;
+  "realtime.presences": RealtimePresences;
   "realtime.schema_migrations": RealtimeSchemaMigrations;
   "realtime.subscription": RealtimeSubscription;
-  Site: Site;
-  SiteBranch: SiteBranch;
-  SiteCustomization: SiteCustomization;
   "storage.buckets": StorageBuckets;
   "storage.migrations": StorageMigrations;
   "storage.objects": StorageObjects;
-  Subscription: Subscription;
-  "supabase_functions.hooks": SupabaseFunctionsHooks;
-  "supabase_functions.migrations": SupabaseFunctionsMigrations;
-  "supabase_migrations.schema_migrations": SupabaseMigrationsSchemaMigrations;
+  "storage.s3_multipart_uploads": StorageS3MultipartUploads;
+  "storage.s3_multipart_uploads_parts": StorageS3MultipartUploadsParts;
   "vault.decrypted_secrets": VaultDecryptedSecrets;
   "vault.secrets": VaultSecrets;
-  "vectors.embeddings": VectorsEmbeddings;
+  World: World;
 }

@@ -10,7 +10,7 @@ const building = process.env.NODE_ENV === 'production'
 export default defineConfig(({ mode, command, isSsrBuild }) => {
     const define = {} as any
 
-    define['global'] = 'window'
+    define['global'] = 'globalThis'
     // define['process'] = '{env: {}}'
     Object.assign(
         define,

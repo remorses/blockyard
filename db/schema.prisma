@@ -310,6 +310,18 @@ model Org {
   // payments            PaymentForCredits[]
   // sites               Site[]
   // subscriptions       Subscription[]
+  World           World[]
+
+  @@schema("public")
+}
+
+model World {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  orgId String
+  org   Org    @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
 
   @@schema("public")
 }
