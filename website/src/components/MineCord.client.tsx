@@ -4,13 +4,17 @@ let started = false
 
 export function MineCord() {
     useEffect(() => {
+        let destroy = () => {}
         Promise.resolve().then(async () => {
             const { start } = await import('~/minecord')
             if (!started) {
-                start()
                 started = true
+                destroy = await start()
             }
         })
+        return () => {
+            destroy()
+        }
     }, [])
     return (
         <div id='app'>

@@ -12,11 +12,6 @@ use super::shared::{
     setup_client, setup_components, setup_dispatcher, setup_entities, setup_methods, SoilingStage,
 };
 
-
-
-
-
-
 pub const MOUNTAIN_HEIGHT: f64 = 1.1;
 pub const RIVER_HEIGHT: f64 = 0.25;
 pub const PLAINS_HEIGHT: f64 = 0.347;
@@ -137,6 +132,7 @@ struct TimeMethodPayload {
 }
 
 pub fn setup_terrain_world() -> World {
+    let seed = 123456789;
     let config = WorldConfig::new()
         .terrain(
             &NoiseOptions::new()
@@ -146,11 +142,13 @@ pub fn setup_terrain_world() -> World {
                 .lacunarity(1.8623123)
                 .build(),
         )
+        .saving(true)
+        .save_dir("./world")
         .preload(true)
         .preload_radius(2)
         .default_time(1200.0)
         .time_per_day(2400)
-        .seed(999)
+        .seed(seed)
         .build();
 
     let mut world = World::new("terrain", &config);
@@ -193,7 +191,7 @@ pub fn setup_terrain_world() -> World {
             .octaves(7)
             .persistence(0.52)
             .lacunarity(2.3)
-            .seed(9999)
+            .seed(seed)
             .build(),
     )
     .add_bias_points(&[[-1.0, 3.5], [0.0, 3.0], [0.4, 5.0], [1.0, 8.5]])
@@ -218,7 +216,7 @@ pub fn setup_terrain_world() -> World {
             .octaves(7)
             .persistence(0.53)
             .lacunarity(2.0)
-            .seed(4544)
+            .seed(config.seed)
             .build(),
     )
     .add_bias_points(&[[-1.0, 3.5], [1.0, 3.5]])
@@ -240,7 +238,7 @@ pub fn setup_terrain_world() -> World {
             .octaves(7)
             .persistence(0.5)
             .lacunarity(1.9)
-            .seed(904)
+            .seed(config.seed)
             .build(),
     )
     .add_bias_points(&[[-1.0, 8.5], [1.0, 8.5]])
@@ -309,7 +307,7 @@ pub fn setup_terrain_world() -> World {
             &NoiseOptions::new()
                 .frequency(0.4)
                 .lacunarity(2.9)
-                .seed(123123)
+                .seed(seed)
                 .build(),
         );
         tiny_trees.set_threshold(3.5);
@@ -331,7 +329,7 @@ pub fn setup_terrain_world() -> World {
             &NoiseOptions::new()
                 .frequency(0.36)
                 .lacunarity(2.9)
-                .seed(532874)
+                .seed(seed)
                 .build(),
         );
         oak_trees.set_threshold(4.5);
@@ -361,7 +359,7 @@ pub fn setup_terrain_world() -> World {
             &NoiseOptions::new()
                 .frequency(0.15)
                 .lacunarity(2.9)
-                .seed(4716384)
+                .seed(seed)
                 .build(),
         );
         boulder_trees.set_threshold(4.5);
@@ -384,7 +382,7 @@ pub fn setup_terrain_world() -> World {
             &NoiseOptions::new()
                 .frequency(0.25)
                 .lacunarity(3.0)
-                .seed(8675309)
+                .seed(seed)
                 .build(),
         );
         mystical_trees.set_threshold(5.0);

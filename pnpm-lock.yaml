@@ -67,6 +67,9 @@ importers:
       '@types/three':
         specifier: ^0.164.0
         version: 0.164.0
+      '@voxelize/aabb':
+        specifier: ^1.0.0
+        version: 1.0.0(postcss@8.4.38)
       '@voxelize/core':
         specifier: ^0.1.158
         version: 0.1.190(bufferutil@4.0.8)(postcss@8.4.38)(postprocessing@6.35.4(three@0.158.0))(three@0.158.0)(utf-8-validate@6.0.4)

@@ -6,6 +6,7 @@ import * as THREE from 'three'
 
 import '@voxelize/core/dist/styles.css'
 import { voiceChat } from '~/voice'
+import { setupWorld } from '~/world'
 
 const canvas = document.getElementById('canvas')
 
@@ -127,7 +128,7 @@ world.sky.paint('sides', VOXELIZE.artFunctions.drawStars())
 const inputs = new VOXELIZE.Inputs()
 
 // To run around the world
-const rigidControls = new VOXELIZE.RigidControls(
+const controls = new VOXELIZE.RigidControls(
     camera,
     renderer.domElement,
     world,
@@ -136,10 +137,10 @@ const rigidControls = new VOXELIZE.RigidControls(
     },
 )
 
-rigidControls.connect(inputs)
+controls.connect(inputs)
 
-inputs.bind('g', rigidControls.toggleGhostMode)
-inputs.bind('f', rigidControls.toggleFly)
+inputs.bind('g', controls.toggleGhostMode)
+inputs.bind('f', controls.toggleFly)
 
 // To add/remove blocks
 const voxelInteract = new VOXELIZE.VoxelInteract(camera, world, {
@@ -180,24 +181,45 @@ function createCharacter() {
 }
 
 const mainCharacter = createCharacter()
-rigidControls.attachCharacter(mainCharacter)
+controls.attachCharacter(mainCharacter)
+world.addChunkInitListener([0, 0], async (chunk) => {
+    let i = 0
+    while (i < 10) {
+        await sleep(600)
+        let status = world.getChunkStatus(0, 0)
+        if (status === 'loaded') {
+            controls.teleportToTop(0, 0)
+            return
+        } else {
+            console.log('waiting for chunk to load, then teleport')
+        }
+    }
+})
+
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 // To change the perspective of the player
-const perspectives = new VOXELIZE.Perspective(rigidControls, world)
+const perspectives = new VOXELIZE.Perspective(controls, world)
 perspectives.connect(inputs)
 
 /* -------------------------------------------------------------------------- */
 /*                           MULTIPLAYER CHARACTERS                           */
 /* -------------------------------------------------------------------------- */
-const peers = new VOXELIZE.Peers(rigidControls.object)
+const peers = new VOXELIZE.Peers(controls.object)
 
 peers.createPeer = createCharacter
 
+
+
 peers.onPeerJoin = (id) => {
-    const peer = peers.getPeerById(id)
-    if (!peer) return
-    peer.userData ||= {}
-    peer.userData.id = id
+    setTimeout(() => {
+        const peer = peers.getPeerById(id)
+        if (!peer) return
+        peer.userData ||= {}
+        peer.userData.id = id
+    }, 1000)
 
     // setTimeout(() => {
     //     chat.onChat({
@@ -229,8 +251,8 @@ debug.registerDisplay('Current time', world, 'time', (time) =>
     Number(time).toFixed(2),
 )
 
-const gui = new GUI()
-gui.domElement.style.top = '10px'
+// const gui = new GUI()
+// gui.domElement.style.top = '10px'
 
 inputs.bind('j', debug.toggle)
 
@@ -257,7 +279,7 @@ function animate() {
     if (world.isInitialized) {
         perspectives.update()
         voxelInteract.update()
-        rigidControls.update()
+        controls.update()
         lightShined.update()
         shadows.update()
 
@@ -290,21 +312,14 @@ export async function start() {
     await network.connect(
         process.env.PUBLIC_SERVER_URL || 'https://minecord-rust-server.fly.dev',
     )
-    await network.join('tutorial')
-
+    await network.join('terrain')
     await world.initialize()
+    await setupWorld(world)
+
     await applyBlockTextures()
 
-    gui.add(
-        { time: world.time },
-        'time',
-        0,
-        world.options.timePerDay,
-        0.01,
-    ).onFinishChange((time) => {
-        world.time = time
-    })
     world.time = 0.5 * 24_000
+    world.renderRadius = 8
 
     await voiceChat()
 
@@ -312,4 +327,7 @@ export async function start() {
         console.log('stuff', payload)
     })
     events.emit('stuff', 'hello')
+    return () => {
+        mainCharacter.remove()
+    }
 }

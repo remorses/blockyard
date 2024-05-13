@@ -19,6 +19,7 @@
     "@remix-run/serve": "^2.9.2",
     "@types/simple-peer": "^9.11.8",
     "@types/three": "^0.164.0",
+    "@voxelize/aabb": "^1.0.0",
     "@voxelize/core": "^0.1.158",
     "isbot": "^4.1.0",
     "lil-gui": "^0.19.1",

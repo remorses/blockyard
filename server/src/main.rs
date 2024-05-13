@@ -2,6 +2,8 @@ use voxelize::{Block, Event, FlatlandStage, Registry, Server, Voxelize, World, W
 mod worlds;
 
 use worlds::terrain::{setup_terrain_world};
+mod registry;
+use registry::setup_registry;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -9,9 +11,10 @@ async fn main() -> std::io::Result<()> {
     let stone = Block::new("Stone").id(2).build();
     let grass_block = Block::new("Grass Block").id(3).build();
 
-    let config = WorldConfig::new().save_dir("./world").saving(true).build();
+    let config = WorldConfig::new().build();
 
     let mut world = World::new("tutorial", &config);
+    
 
     {
         let mut pipeline = world.pipeline_mut();
@@ -23,8 +26,8 @@ async fn main() -> std::io::Result<()> {
         )
     }
 
-    let mut registry = Registry::new();
-    registry.register_blocks(&[dirt, stone, grass_block]);
+    let registry = setup_registry();
+
 
     let mut server = Server::new().port(4000).registry(&registry).build();
 
