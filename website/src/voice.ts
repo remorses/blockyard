@@ -1,7 +1,7 @@
 import { Peers } from '@voxelize/core'
 
 import { Peer } from 'peerjs'
-import { voxelizeState } from '~/minecord'
+import { voxelizeState } from '~/lib/minecord'
 
 const peersRef: Record<string, Peer> = {}
 const audioElementsRef = {}

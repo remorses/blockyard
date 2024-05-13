@@ -6,7 +6,7 @@ export function MineCord() {
     useEffect(() => {
         let destroy = () => {}
         Promise.resolve().then(async () => {
-            const { start } = await import('~/minecord')
+            const { start } = await import('~/lib/minecord')
             if (!started) {
                 started = true
                 destroy = await start()
