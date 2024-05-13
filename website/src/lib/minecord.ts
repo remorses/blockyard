@@ -1,4 +1,4 @@
-import './style.css'
+
 
 import * as VOXELIZE from '@voxelize/core'
 import { GUI } from 'lil-gui'
