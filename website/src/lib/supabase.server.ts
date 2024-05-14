@@ -16,6 +16,7 @@ export function getSupabaseWithHeaders({ request }: { request: Request }) {
         env.PUBLIC_SUPABASE_ANON_KEY!,
         {
             // jwtSecret: process.env.SUPABASE_JWT_SECRET,
+
             cookies: {
                 get(key) {
                     return cookies[key]

@@ -14,7 +14,6 @@
         "typecheck": "tsc"
     },
     "dependencies": {
-        "db": "workspace:*",
         "@hookform/resolvers": "^3.3.4",
         "@nextui-org/react": "^2.3.6",
         "@nextui-org/theme": "^2.2.3",
@@ -27,7 +26,8 @@
         "@types/simple-peer": "^9.11.8",
         "@types/three": "^0.164.0",
         "@voxelize/aabb": "^1.0.0",
-        "@voxelize/core": "^0.1.158",
+        "@voxelize/core": "^0.1.193",
+        "db": "workspace:*",
         "isbot": "^4.1.0",
         "lil-gui": "^0.19.1",
         "lucide-react": "^0.378.0",
