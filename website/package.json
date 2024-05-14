@@ -14,9 +14,11 @@
         "typecheck": "tsc"
     },
     "dependencies": {
+        "98.css": "^0.1.20",
         "@hookform/resolvers": "^3.3.4",
         "@nextui-org/react": "^2.3.6",
         "@nextui-org/theme": "^2.2.3",
+        "@react95/core": "^7.0.2",
         "@remix-run/node": "^2.9.2",
         "@remix-run/react": "^2.9.2",
         "@remix-run/serve": "^2.9.2",
@@ -28,6 +30,7 @@
         "@voxelize/aabb": "^1.0.0",
         "@voxelize/core": "^0.1.193",
         "db": "workspace:*",
+        "framer-motion": "^11.2.0",
         "isbot": "^4.1.0",
         "lil-gui": "^0.19.1",
         "lucide-react": "^0.378.0",
@@ -38,8 +41,10 @@
         "react-dom": "^18.2.0",
         "react-hook-form": "^7.51.4",
         "react-hot-toast": "^2.4.1",
+        "react95": "^4.0.0",
         "remix-hook-form": "^4.3.1",
         "simple-peer": "^9.11.1",
+        "styled-components": "^6.1.11",
         "three": "^0.158.0",
         "vite-plugin-node-polyfills": "^0.21.0",
         "zod": "^3.23.8"

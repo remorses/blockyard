@@ -12,13 +12,15 @@ import { useEffect } from 'react'
 import { MineCord } from '~/components/MineCord.client'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
-import { Button, ButtonGroup, Input } from '@nextui-org/react'
+import { Button, TextInput, ProgressBar } from 'react95'
 import {
     getValidatedFormData,
     useRemixForm,
     validateFormData,
 } from 'remix-hook-form'
 import { Resolver, zodResolver } from '@hookform/resolvers/zod'
+import { ProgressBarIncrementing, Windows95Provider } from '~/components/95'
+import { sleep } from '~/lib/utils'
 
 export const meta: MetaFunction = () => {
     return [
@@ -36,6 +38,8 @@ const resolver = zodResolver(schema)
 type Data = z.infer<typeof schema>
 
 export async function action({ request }: ActionFunctionArgs) {
+    await sleep(1000 * 6)
+    return {}
     const { supabase, userId, headers, session } =
         await getSupabaseWithSessionHeaders({
             request,
@@ -110,7 +114,7 @@ export default function Page() {
     })
 
     return (
-        <div className='p-12 flex flex-col'>
+        <div className='p-12 w-[700px] flex flex-col mx-auto'>
             <Form
                 method='POST'
                 onSubmit={handleSubmit}
@@ -118,24 +122,23 @@ export default function Page() {
             >
                 <Button
                     type='submit'
-                    isLoading={isSubmitting}
                     {...register('option', { value: 'create' })}
                 >
                     Create World
                 </Button>
-                <div className='flex '>
+                <div className='flex items-stretch gap-4'>
                     <Button
                         type='submit'
                         {...register('option', { value: 'join' })}
                     >
                         Join World
                     </Button>
-                    <Input
+                    <TextInput
                         placeholder='World name'
-                        errorMessage={errors?.worldName?.message}
                         {...register('worldName', {})}
                     />
                 </div>
+                {isSubmitting && <ProgressBarIncrementing />}
             </Form>
         </div>
     )

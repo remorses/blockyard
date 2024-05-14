@@ -1,4 +1,5 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
+
 import './global.css'
 import {
     Links,
