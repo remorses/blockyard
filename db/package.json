@@ -5,6 +5,7 @@
     "description": "db",
     "scripts": {
         "studio": "doppler run -- prisma studio",
+        "enable-rls": "doppler run -- tsx scripts/enable-rls.ts",
         "gen:kysely": "doppler run -- kysely-codegen --out-file kysely.types.ts",
         "diff:prod": "doppler run -c production --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
         "diff:preview": "doppler run -c preview --command 'pnpm prisma migrate diff --script --from-url $DATABASE_URL --to-schema-datamodel schema.prisma > diff.sql'",
@@ -13,7 +14,7 @@
         "fix-permissions": "doppler run -- tsx scripts/fix-permissions.ts",
         "fix-permissions:prod": "doppler run -c production -- tsx scripts/fix-permissions.ts",
         "gen:supabase": "doppler run --command 'pnpm supabase gen types typescript --db-url $DATABASE_URL > supabase.types.ts'",
-        "push": "doppler run -c dev --command 'prisma db push && pnpm fix-permissions && pnpm gen:kysely'",
+        "push": "doppler run -c dev --command 'prisma db push && pnpm fix-permissions && pnpm gen:kysely && pnpm enable-rls'",
         "push:prod": "doppler run -c production -- prisma db push && prisma generate",
         "pull": "doppler run -c dev -- prisma db pull && prisma generate",
         "postinstall": "prisma generate",

@@ -24,4 +24,5 @@ jobs:
         uses: covbot/pnpm-install-with-cache@v1
       # scripts
       - run: pnpm build
-      - run: pnpm test
+      - run: pnpm deployment
+      
