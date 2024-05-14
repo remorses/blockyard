@@ -10,7 +10,7 @@ use registry::setup_registry;
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
-use actix::{Actor, Addr, Handler, Message};
+use actix::{Actor, Addr, Handler, Message, MessageResponse};
 use actix_cors::Cors;
 use actix_files::{Files, NamedFile};
 use actix_web::{web::Query, Error, HttpRequest, Result};
@@ -87,33 +87,47 @@ async fn info(server: web::Data<Addr<Server>>) -> Result<HttpResponse> {
 }
 
 /// Send message to specific world
-#[derive(Message,Deserialize, Serialize,Debug,Clone)]
-#[rtype(result = "()")]
+#[derive(Message, Deserialize, Serialize, Debug, Clone)]
+#[rtype(result = "InstantiateResponse")]
 pub struct Instantiate {
     /// Id of the client session
     pub world_id: String,
 }
-
-impl Handler<Instantiate> for Server {
-    type Result = ();
-
-    fn handle(&mut self, msg: Instantiate, _ctx: &mut Self::Context) -> Self::Result {
-        self.create_world(&msg.world_id, &WorldConfig::default()); // Call the method with the world_id
-    }
+#[derive(MessageResponse, Serialize, Deserialize, Debug, Clone)]
+pub struct InstantiateResponse {
+    success: bool,
+    world_id: String,
 }
 
+impl Handler<Instantiate> for Server {
+    type Result = InstantiateResponse;
+
+    fn handle(&mut self, msg: Instantiate, _ctx: &mut Self::Context) -> Self::Result {
+        let res = self
+            .create_world(&msg.world_id, &WorldConfig::default())
+            .expect("cannot create world");
+        let world_id = res.id.clone();
+        return InstantiateResponse {
+            success: true,
+            world_id,
+        };
+    }
+}
 
 async fn instantiate(
     voxelize_server: web::Data<Addr<Server>>,
     payload: web::Json<Instantiate>,
 ) -> impl Responder {
-    
     println!("Received instantiate request: {:?}", payload.clone());
-    voxelize_server.send(payload.clone()).await.unwrap();
     // send response back with same world_id
-    
-    return HttpResponse::Ok().json(payload.clone());
-    
+
+    let response = voxelize_server
+        .send(payload.into_inner())
+        .await
+        .expect("Failed to create world");
+
+    // Return the InstantiateResponse
+    HttpResponse::Ok().json(response)
 }
 
 pub struct MyApp;
