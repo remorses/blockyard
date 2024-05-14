@@ -12,7 +12,14 @@ import { useEffect } from 'react'
 import { MineCord } from '~/components/MineCord.client'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
-import { Button, TextInput, ProgressBar } from 'react95'
+import {
+    Button,
+    TextInput,
+    Separator,
+    WindowContent,
+    WindowHeader,
+    Window,
+} from 'react95'
 import {
     getValidatedFormData,
     useRemixForm,
@@ -24,7 +31,7 @@ import { sleep } from '~/lib/utils'
 
 export const meta: MetaFunction = () => {
     return [
-        { title: 'MineCord' },
+        { title: 'BLockyard' },
         { name: 'description', content: 'Minecraft + Discord + Zoom' },
     ]
 }
@@ -38,8 +45,8 @@ const resolver = zodResolver(schema)
 type Data = z.infer<typeof schema>
 
 export async function action({ request }: ActionFunctionArgs) {
-    await sleep(1000 * 6)
-    return {}
+    // await sleep(1000 * 6)
+    // return {}
     const { supabase, userId, headers, session } =
         await getSupabaseWithSessionHeaders({
             request,
@@ -114,32 +121,40 @@ export default function Page() {
     })
 
     return (
-        <div className='p-12 w-[700px] flex flex-col mx-auto'>
-            <Form
-                method='POST'
-                onSubmit={handleSubmit}
-                className='flex-col gap-6 flex'
-            >
-                <Button
-                    type='submit'
-                    {...register('option', { value: 'create' })}
-                >
-                    Create World
-                </Button>
-                <div className='flex items-stretch gap-4'>
-                    <Button
-                        type='submit'
-                        {...register('option', { value: 'join' })}
+        <div className='flex flex-col items-center pt-12'>
+            <Window className='w-[700px] mx-auto'>
+                <WindowHeader>Create New World</WindowHeader>
+                <WindowContent>
+                    <Form
+                        method='POST'
+                        onSubmit={handleSubmit}
+                        className='flex-col gap-6 flex'
                     >
-                        Join World
-                    </Button>
-                    <TextInput
-                        placeholder='World name'
-                        {...register('worldName', {})}
-                    />
-                </div>
-                {isSubmitting && <ProgressBarIncrementing />}
-            </Form>
+                        <Button
+                            type='submit'
+                            {...register('option', { value: 'create' })}
+                        >
+                            Create World
+                        </Button>
+                        <Separator />
+                        <div className=''>or join an existing world</div>
+                        <div className='flex items-stretch gap-4'>
+                            <Button
+                                type='submit'
+                                {...register('option', { value: 'join' })}
+                            >
+                                Join World
+                            </Button>
+                            <TextInput
+                                placeholder='world code'
+                                variant='flat'
+                                {...register('worldName', {})}
+                            />
+                        </div>
+                        {isSubmitting && <ProgressBarIncrementing />}
+                    </Form>
+                </WindowContent>
+            </Window>
         </div>
     )
 }

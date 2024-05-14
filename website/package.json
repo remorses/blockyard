@@ -6,7 +6,8 @@
     "scripts": {
         "build:dev": "doppler run -c dev -- remix vite:build",
         "build": "remix vite:build",
-        "dev": "doppler run -- remix vite:dev --port 3467",
+        "dev": "doppler run --preserve-env -- remix vite:dev --port 3467",
+        "dev:prod": "PUBLIC_SERVER_URL=https://minecord-rust-server.fly.dev pnpm dev",
         "fly": "fly -a minecord-website ",
         "deployment": "tsx scripts/deploy.ts",
         "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",

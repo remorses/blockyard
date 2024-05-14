@@ -1,4 +1,3 @@
-
 import { useSyncExternalStore } from 'react'
 import {
     LoaderFunctionArgs,
@@ -9,6 +8,7 @@ import {
 import { useEffect } from 'react'
 import { MineCord } from '~/components/MineCord.client'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
+import { prisma } from 'db/prisma'
 
 export const meta: MetaFunction = () => {
     return [
@@ -36,8 +36,17 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
         return redirect('/404', { headers })
     }
 
+    const [world] = await Promise.all([
+        prisma.world.findFirst({
+            where: {
+                id: worldId,
+            },
+        }),
+    ])
+
     return json(
         {
+            world,
             //
         },
         { headers },
