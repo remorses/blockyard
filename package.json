@@ -6,7 +6,7 @@
         "watch": "pnpm -r watch",
         "deployment": "pnpm -r deployment",
         "build": "pnpm -r build",
-        "server:dev": "cd server && cargo watch -w src -x \"run --release\"",
+        "server:dev": "pnpm --filter server dev",
         "release": "pnpm build && changeset"
     },
     "devDependencies": {

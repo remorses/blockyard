@@ -34,5 +34,26 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
             proxySsrExternalModules: true,
         },
         plugins: [remix({ appDirectory: 'src' }), tsconfigPaths()],
+        test: {
+            alias: [
+                {
+                    find: /^@voxelize\/core/,
+                    replacement: '@voxelize/core/dist/index.js',
+                },
+            ],
+            browser: {
+                enabled: true,
+                // headless: true,
+                name: 'chrome', // browser name is required
+            },
+            // setupFiles: ['@vitest/web-worker'],
+
+            exclude: [
+                '**/dist/**',
+                '**/esm/**',
+                '**/node_modules/**',
+                '**/e2e/**',
+            ],
+        },
     }
 })

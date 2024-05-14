@@ -265,7 +265,9 @@ network.register(world).register(peers)
 
 const events = new VOXELIZE.Events()
 
+
 network.register(events)
+
 
 /* -------------------------------------------------------------------------- */
 /*                               MAIN GAME LOOPS                              */

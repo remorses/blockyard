@@ -1,6 +1,8 @@
 {
+    "name": "server",
     "scripts": {
         "deployment": "pnpm tsx scripts/deploy.ts",
+        "dev": "cargo watch -w src -x \"run --release\"",
         "fly": "fly -a minecord-rust-server"
     }
 }

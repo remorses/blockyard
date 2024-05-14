@@ -1910,7 +1910,12 @@ dependencies = [
 name = "server"
 version = "0.1.0"
 dependencies = [
+ "actix",
+ "actix-cors",
+ "actix-files",
  "actix-web",
+ "actix-web-actors",
+ "hashbrown 0.14.5",
  "kdtree",
  "log",
  "nanoid",
