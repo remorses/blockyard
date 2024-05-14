@@ -1,4 +1,7 @@
-use voxelize::{Block, Event, FlatlandStage, Info, Registry, Server, Voxelize, World, WorldConfig, WsSession};
+use serde::{Deserialize, Serialize};
+use voxelize::{
+    Block, Event, FlatlandStage, Info, Registry, Server, Voxelize, World, WorldConfig, WsSession,
+};
 mod worlds;
 
 use worlds::terrain::setup_terrain_world;
@@ -7,13 +10,10 @@ use registry::setup_registry;
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
-use actix::{Actor, Addr};
+use actix::{Actor, Addr, Handler, Message};
 use actix_cors::Cors;
 use actix_files::{Files, NamedFile};
-use actix_web::{
-    web::{Query},
-    Error, HttpRequest, Result,
-};
+use actix_web::{web::Query, Error, HttpRequest, Result};
 use actix_web_actors::ws;
 use hashbrown::HashMap;
 use log::{info, warn};
@@ -86,22 +86,52 @@ async fn info(server: web::Data<Addr<Server>>) -> Result<HttpResponse> {
     Ok(HttpResponse::Ok().json(info))
 }
 
+/// Send message to specific world
+#[derive(Message,Deserialize, Serialize,Debug,Clone)]
+#[rtype(result = "()")]
+pub struct Instantiate {
+    /// Id of the client session
+    pub world_id: String,
+}
+
+impl Handler<Instantiate> for Server {
+    type Result = ();
+
+    fn handle(&mut self, msg: Instantiate, _ctx: &mut Self::Context) -> Self::Result {
+        self.create_world(&msg.world_id, &WorldConfig::default()); // Call the method with the world_id
+    }
+}
+
+
+async fn instantiate(
+    voxelize_server: web::Data<Addr<Server>>,
+    payload: web::Json<Instantiate>,
+) -> impl Responder {
+    
+    println!("Received instantiate request: {:?}", payload.clone());
+    voxelize_server.send(payload.clone()).await.unwrap();
+    // send response back with same world_id
+    
+    return HttpResponse::Ok().json(payload.clone());
+    
+}
+
 pub struct MyApp;
 
 impl MyApp {
     /// Run a voxelize server instance. This blocks the main thread, as the game loop is essentially a while loop
     /// running indefinitely. Keep in mind that the server instance passed in isn't a borrow, so `Voxelize::run`
     /// takes ownership of the server.
-    pub async fn run(mut server: Server) -> std::io::Result<()> {
-        server.prepare();
-        server.started = true;
+    pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
+        voxel_server.prepare();
+        voxel_server.started = true;
 
-        let addr = server.addr.to_owned();
-        let port = server.port.to_owned();
-        let serve = server.serve.to_owned();
-        let secret = server.secret.to_owned();
+        let addr = voxel_server.addr.to_owned();
+        let port = voxel_server.port.to_owned();
+        let serve = voxel_server.serve.to_owned();
+        let secret = voxel_server.secret.to_owned();
 
-        let server_addr = server.start();
+        let server_addr = voxel_server.start();
 
         if serve.is_empty() {
             info!("Attempting to serve static folder: {}", serve);
@@ -121,6 +151,7 @@ impl MyApp {
                 }))
                 .route("/", web::get().to(index))
                 .route("/ws/", web::get().to(ws_route))
+                .route("/instantiate", web::post().to(instantiate))
                 .route("/info", web::get().to(info));
 
             if serve.is_empty() {
