@@ -132,56 +132,49 @@ async fn instantiate(
     HttpResponse::Ok().json(response)
 }
 
-pub struct MyApp;
+pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
+    voxel_server.prepare();
+    voxel_server.started = true;
 
-impl MyApp {
-    /// Run a voxelize server instance. This blocks the main thread, as the game loop is essentially a while loop
-    /// running indefinitely. Keep in mind that the server instance passed in isn't a borrow, so `Voxelize::run`
-    /// takes ownership of the server.
-    pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
-        voxel_server.prepare();
-        voxel_server.started = true;
+    let addr = voxel_server.addr.to_owned();
+    let port = voxel_server.port.to_owned();
+    let serve = voxel_server.serve.to_owned();
+    let secret = voxel_server.secret.to_owned();
 
-        let addr = voxel_server.addr.to_owned();
-        let port = voxel_server.port.to_owned();
-        let serve = voxel_server.serve.to_owned();
-        let secret = voxel_server.secret.to_owned();
+    let server_addr = voxel_server.start();
 
-        let server_addr = voxel_server.start();
+    if serve.is_empty() {
+        info!("Attempting to serve static folder: {}", serve);
+    }
+
+    let srv = HttpServer::new(move || {
+        let serve = serve.to_owned();
+        let secret = secret.to_owned();
+        let cors = Cors::permissive();
+
+        let app = App::new()
+            .wrap(cors)
+            .app_data(web::Data::new(secret))
+            .app_data(web::Data::new(server_addr.clone()))
+            .app_data(web::Data::new(Config {
+                serve: serve.to_owned(),
+            }))
+            .route("/", web::get().to(index))
+            .route("/ws/", web::get().to(ws_route))
+            .route("/instantiate", web::post().to(instantiate))
+            .route("/info", web::get().to(info));
 
         if serve.is_empty() {
-            info!("Attempting to serve static folder: {}", serve);
+            app
+        } else {
+            app.service(Files::new("/", serve).show_files_listing())
         }
+    })
+    .bind((addr.to_owned(), port.to_owned()))?;
 
-        let srv = HttpServer::new(move || {
-            let serve = serve.to_owned();
-            let secret = secret.to_owned();
-            let cors = Cors::permissive();
+    info!("🍄  Voxelize backend running on http://{}:{}", addr, port);
 
-            let app = App::new()
-                .wrap(cors)
-                .app_data(web::Data::new(secret))
-                .app_data(web::Data::new(server_addr.clone()))
-                .app_data(web::Data::new(Config {
-                    serve: serve.to_owned(),
-                }))
-                .route("/", web::get().to(index))
-                .route("/ws/", web::get().to(ws_route))
-                .route("/instantiate", web::post().to(instantiate))
-                .route("/info", web::get().to(info));
-
-            if serve.is_empty() {
-                app
-            } else {
-                app.service(Files::new("/", serve).show_files_listing())
-            }
-        })
-        .bind((addr.to_owned(), port.to_owned()))?;
-
-        info!("🍄  Voxelize backend running on http://{}:{}", addr, port);
-
-        srv.run().await
-    }
+    srv.run().await
 }
 
 #[actix_web::main]
@@ -215,5 +208,5 @@ async fn main() -> std::io::Result<()> {
     server.set_action_handle("test", |event, _server| {
         println!("Received event: {:?}", event);
     });
-    MyApp::run(server).await
+    run(server).await
 }
