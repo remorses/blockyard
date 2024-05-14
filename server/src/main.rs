@@ -103,14 +103,19 @@ impl Handler<Instantiate> for Server {
     type Result = InstantiateResponse;
 
     fn handle(&mut self, msg: Instantiate, _ctx: &mut Self::Context) -> Self::Result {
-        let res = self
-            .create_world(&msg.world_id, &WorldConfig::default())
-            .expect("cannot create world");
-        let world_id = res.id.clone();
-        return InstantiateResponse {
-            success: true,
-            world_id,
-        };
+        let create_result = self.create_world(&msg.world_id, &WorldConfig::default());
+
+        if let Ok(world) = create_result {
+            (InstantiateResponse {
+                success: true,
+                world_id: world.id.clone(),
+            })
+        } else {
+            (InstantiateResponse {
+                success: false,
+                world_id: "".to_string(),
+            })
+        }
     }
 }
 
