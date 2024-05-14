@@ -1,4 +1,3 @@
-import { shell } from '@xmorse/deployment-utils/src'
 import { Prisma, prisma } from '../prisma'
 
 const str = [
