@@ -86,11 +86,9 @@ async fn info(server: web::Data<Addr<Server>>) -> Result<HttpResponse> {
     Ok(HttpResponse::Ok().json(info))
 }
 
-/// Send message to specific world
 #[derive(Message, Deserialize, Serialize, Debug, Clone)]
 #[rtype(result = "InstantiateResponse")]
-pub struct Instantiate {
-    /// Id of the client session
+pub struct InstantiateRequest {
     pub world_id: String,
 }
 #[derive(MessageResponse, Serialize, Deserialize, Debug, Clone)]
@@ -99,10 +97,10 @@ pub struct InstantiateResponse {
     world_id: String,
 }
 
-impl Handler<Instantiate> for Server {
+impl Handler<InstantiateRequest> for Server {
     type Result = InstantiateResponse;
 
-    fn handle(&mut self, msg: Instantiate, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: InstantiateRequest, _ctx: &mut Self::Context) -> Self::Result {
         let create_result = self.create_world(&msg.world_id, &WorldConfig::default());
 
         if let Ok(world) = create_result {
@@ -121,10 +119,9 @@ impl Handler<Instantiate> for Server {
 
 async fn instantiate(
     voxelize_server: web::Data<Addr<Server>>,
-    payload: web::Json<Instantiate>,
+    payload: web::Json<InstantiateRequest>,
 ) -> impl Responder {
     println!("Received instantiate request: {:?}", payload.clone());
-    // send response back with same world_id
 
     let response = voxelize_server
         .send(payload.into_inner())
