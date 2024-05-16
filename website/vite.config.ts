@@ -4,6 +4,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { installGlobals } from '@remix-run/node'
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { glslify } from 'vite-plugin-glslify'
 
 const building = process.env.NODE_ENV === 'production'
 
@@ -33,7 +34,7 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
         legacy: {
             proxySsrExternalModules: true,
         },
-        plugins: [remix({ appDirectory: 'src' }), tsconfigPaths()],
+        plugins: [glslify(), remix({ appDirectory: 'src' }), tsconfigPaths({})],
         test: {
             alias: [
                 {
