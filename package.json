@@ -5,7 +5,8 @@
         "test": "NODE_ENV=test vitest",
         "watch": "pnpm -r watch",
         "deployment": "pnpm -r deployment",
-        "build": "pnpm -r build",
+        "build": "pnpm -r --filter './*' build",
+        "build:voxelize": "pnpm -r --filter './voxelize/packages/**' build",
         "server:dev": "pnpm --filter server dev",
         "release": "pnpm build && changeset"
     },

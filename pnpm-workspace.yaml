@@ -1,4 +1,4 @@
 packages:
   - ./*
-  - "packages/*"
-  - "examples/client"
+  - "voxelize/packages/*"
+  - "voxelize/examples/client"
