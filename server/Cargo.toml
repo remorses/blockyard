@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-voxelize = "0.8.88"
+voxelize = { path = "../voxelize" }
 actix = "0.13.3"
 
 actix-web = "4.5.1"
