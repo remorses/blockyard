@@ -7,7 +7,14 @@ import { setupWorld } from '~/world'
 import { loader } from '~/routes/_auth.world.$worldId'
 import { SerializeFrom } from '@remix-run/node'
 
-export let voxelizeState
+export let voxelizeState: {
+    world: VOXELIZE.World
+    network: VOXELIZE.Network
+    controls: VOXELIZE.RigidControls
+    peers: VOXELIZE.Peers
+    events: VOXELIZE.Events
+    mainCharacter: VOXELIZE.Character
+}
 export async function start(data: SerializeFrom<typeof loader>) {
     const canvas = document.getElementById('canvas')
     if (!canvas) {
@@ -300,8 +307,15 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     world.time = 0.5 * 24_000
     world.renderRadius = 8
-
-    await voiceChat({ isInitializer: userId === hostUserId })
+    voxelizeState = {
+        world,
+        network,
+        controls,
+        peers,
+        events,
+        mainCharacter,
+    }
+    await voiceChat({  isInitializer: userId === hostUserId })
 
     peers.onPeerJoin = (id) => {
         if (id === userId) return
@@ -314,16 +328,6 @@ export async function start(data: SerializeFrom<typeof loader>) {
             peer.userData ||= {}
             peer.userData.id = id
         }, 1000)
-    }
-
-    
-    voxelizeState = {
-        world,
-        network,
-        controls,
-        peers,
-        events,
-        mainCharacter,
     }
 
     return () => {
