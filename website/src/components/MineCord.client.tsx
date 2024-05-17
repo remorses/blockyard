@@ -3,6 +3,8 @@ import { Link, useLoaderData } from '@remix-run/react'
 import { XIcon } from 'lucide-react'
 import { useEffect } from 'react'
 import { WindowHeader, WindowContent, Window, Button, TextInput } from 'react95'
+import { voxelizeState } from '~/lib/minecord'
+import { getWorldUrl } from '~/lib/utils'
 import { loader } from '~/routes/_auth.world.$worldId'
 
 let started = false
@@ -40,14 +42,21 @@ function TopLevelUi() {
     }
     return (
         <div className='h-screen flex flex-col items-center  justify-center w-screen fixed inset-0'>
-            {isInviteOpen && <InviteUsersModal onClose={onInviteClose} />}
+            {isInviteOpen && (
+                <InviteUsersModal
+                    onClose={() => {
+                        onInviteClose()
+                        voxelizeState.controls.lock()
+                    }}
+                />
+            )}
         </div>
     )
 }
 
 function InviteUsersModal({ onClose }) {
     const { world } = useLoaderData<typeof loader>()
-    const link = `${window.location.origin}/world/${world.id}`
+    const link = getWorldUrl({ worldId: world.id })
 
     return (
         <Window className='w-[700px] min-h-[400px] mx-auto'>

@@ -282,6 +282,7 @@ function animate() {
 export const voxelizeState = {
     world,
     network,
+    controls,
     peers,
     events,
     mainCharacter,

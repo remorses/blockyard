@@ -1,6 +1,7 @@
 import * as z from 'zod'
 import { prisma } from 'db/prisma'
-import { useSyncExternalStore } from 'react'
+import { Hourglass } from 'react95'
+
 import {
     ActionFunctionArgs,
     LoaderFunctionArgs,
@@ -27,7 +28,8 @@ import {
 } from 'remix-hook-form'
 import { Resolver, zodResolver } from '@hookform/resolvers/zod'
 import { ProgressBarIncrementing, Windows95Provider } from '~/components/95'
-import { sleep } from '~/lib/utils'
+import { sleep, getWorldUrl } from '~/lib/utils'
+import { useNavigation } from '@remix-run/react'
 
 export const meta: MetaFunction = () => {
     return [
@@ -134,6 +136,8 @@ export default function Page() {
         resolver,
     })
 
+    const navigation = useNavigation()
+
     if (!worlds.length) {
         return (
             <div className='flex flex-col items-center pt-12'>
@@ -173,21 +177,42 @@ export default function Page() {
             </div>
         )
     }
+
     return (
         <div className='flex flex-col items-center pt-12'>
             <Window className='w-[700px] mx-auto'>
                 <WindowHeader>Your Worlds</WindowHeader>
                 <WindowContent>
                     <div className='flex flex-col gap-4'>
-                        {worlds.map((world) => (
-                            <div key={world.id} className='flex flex-col gap-4'>
-                                <div>{world.id}</div>
-                                {/* <div>{world.createdByUserId}</div> */}
-                                <Link to={`/world/${world.id}`}>
-                                    <Button>Join World</Button>
-                                </Link>
-                            </div>
-                        ))}
+                        {worlds.map((world) => {
+                            const link = getWorldUrl({ worldId: world.id })
+                            return (
+                                <div
+                                    key={world.id}
+                                    className='flex flex-col gap-4'
+                                >
+                                    <div>{world.id}</div>
+                                    <div className=''>
+                                        Invite Users Sending this link
+                                    </div>
+                                    <TextInput
+                                        variant='flat'
+                                        value={link}
+                                        fullWidth
+                                        readOnly
+                                    />
+                                    {/* <div>{world.createdByUserId}</div> */}
+                                    <Link to={`/world/${world.id}`}>
+                                        <Button primary>
+                                            {navigation.state === 'loading' && (
+                                                <Hourglass className='mr-2 w-6' />
+                                            )}
+                                            Start Meeting
+                                        </Button>
+                                    </Link>
+                                </div>
+                            )
+                        })}
                     </div>
                 </WindowContent>
             </Window>

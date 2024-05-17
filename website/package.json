@@ -49,6 +49,7 @@
         "simple-peer": "^9.11.1",
         "styled-components": "^6.1.11",
         "three": "^0.158.0",
+        "unframer": "^2.3.0",
         "vite-plugin-glslify": "^2.1.0",
         "vite-plugin-node-polyfills": "^0.21.0",
         "webdriverio": "^8.36.1",
