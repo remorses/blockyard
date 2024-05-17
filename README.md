@@ -32,7 +32,9 @@ pages to add
     - in the rust server     
 
 
-
+problems
+- each user has a different world, i need to instantiate them when they start a meeting and destroy them when they leave
+- world should be saved on disk? then use a volume and save the world to it's id folder and hope the volume works. later i can make a pr to add a storage api and use a database.
 
 
 

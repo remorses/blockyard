@@ -104,15 +104,15 @@ impl Handler<InstantiateRequest> for Server {
         let create_result = self.create_world(&msg.world_id, &WorldConfig::default());
 
         if let Ok(world) = create_result {
-            (InstantiateResponse {
+            InstantiateResponse {
                 success: true,
                 world_id: world.id.clone(),
-            })
+            }
         } else {
-            (InstantiateResponse {
+            InstantiateResponse {
                 success: false,
                 world_id: "".to_string(),
-            })
+            }
         }
     }
 }
