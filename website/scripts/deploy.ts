@@ -8,7 +8,7 @@ import path from 'path'
 
 async function main() {
     const stage = getCurrentStage()
-    const env = await getDopplerEnv({ stage, project: 'website' })
+    const env = await getDopplerEnv({ stage: 'production', project: 'website' })
     // await Promise.all([
     //     shell(`pnpm build`, {
     //         env,
