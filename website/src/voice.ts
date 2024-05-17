@@ -6,14 +6,13 @@ import { voxelizeState } from '~/lib/minecord'
 const peersRef: Record<string, Peer> = {}
 const audioElementsRef = {}
 let hostPeerId = 'minecord-host'
-export async function voiceChat() {
+export async function voiceChat({ isInitializer }) {
     try {
         const { peers } = voxelizeState
 
         const clients = peers.children
         const clientId = peers.ownID.replace(/[-_]/g, '')
 
-        const isInitializer = window.location.hash === '#init'
         const peer = new Peer(isInitializer ? hostPeerId : clientId, {})
 
         const conn = peer.connect(hostPeerId)

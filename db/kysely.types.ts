@@ -507,6 +507,7 @@ export interface VaultSecrets {
 
 export interface World {
   createdAt: Generated<Timestamp>;
+  createdByUserId: string;
   id: string;
   orgId: string;
   updatedAt: Generated<Timestamp>;

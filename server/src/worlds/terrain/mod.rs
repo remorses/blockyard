@@ -131,7 +131,7 @@ struct TimeMethodPayload {
     time: f32,
 }
 
-pub fn setup_terrain_world() -> World {
+pub fn setup_terrain_world(world_id: &str) -> World {
     let seed = 123456789;
     let config = WorldConfig::new()
         .terrain(
@@ -143,7 +143,7 @@ pub fn setup_terrain_world() -> World {
                 .build(),
         )
         .saving(true)
-        .save_dir("./world")
+        .save_dir(&("./worlds/".to_string() + world_id))
         .preload(true)
         .preload_radius(2)
         .default_time(1200.0)
@@ -151,7 +151,7 @@ pub fn setup_terrain_world() -> World {
         .seed(seed)
         .build();
 
-    let mut world = World::new("terrain", &config);
+    let mut world = World::new(world_id, &config);
 
     let mut terrain = Terrain::new(&config);
 

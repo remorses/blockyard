@@ -101,7 +101,13 @@ impl Handler<InstantiateRequest> for Server {
     type Result = InstantiateResponse;
 
     fn handle(&mut self, msg: InstantiateRequest, _ctx: &mut Self::Context) -> Self::Result {
-        let create_result = self.create_world(&msg.world_id, &WorldConfig::default());
+        if self.worlds.contains_key(&msg.world_id) {
+            return InstantiateResponse {
+                success: true,
+                world_id: msg.world_id,
+            };
+        }
+        let create_result = self.add_world(setup_terrain_world(&msg.world_id));
 
         if let Ok(world) = create_result {
             InstantiateResponse {
@@ -111,13 +117,13 @@ impl Handler<InstantiateRequest> for Server {
         } else {
             InstantiateResponse {
                 success: false,
-                world_id: "".to_string(),
+                world_id: msg.world_id,
             }
         }
     }
 }
 
-async fn instantiate(
+async fn newWorldApi(
     voxelize_server: web::Data<Addr<Server>>,
     payload: web::Json<InstantiateRequest>,
 ) -> impl Responder {
@@ -161,7 +167,7 @@ pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
             }))
             .route("/", web::get().to(index))
             .route("/ws/", web::get().to(ws_route))
-            .route("/instantiate", web::post().to(instantiate))
+            .route("/api/upsert-world", web::post().to(newWorldApi))
             .route("/info", web::get().to(info));
 
         if serve.is_empty() {
@@ -201,9 +207,9 @@ async fn main() -> std::io::Result<()> {
 
     let mut server = Server::new().port(4000).registry(&registry).build();
 
-    server
-        .add_world(setup_terrain_world())
-        .expect("Failed to add world to server");
+    // server
+    //     .add_world(setup_terrain_world())
+    //     .expect("Failed to add world to server");
 
     server.set_action_handle("test", |event, _server| {
         println!("Received event: {:?}", event);

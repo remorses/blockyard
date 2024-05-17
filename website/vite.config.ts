@@ -42,11 +42,7 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
                     replacement: '@voxelize/core/dist/index.js',
                 },
             ],
-            browser: {
-                enabled: true,
-                // headless: true,
-                name: 'chrome', // browser name is required
-            },
+            
             // setupFiles: ['@vitest/web-worker'],
 
             exclude: [

@@ -1,5 +1,3 @@
-
-
 import * as VOXELIZE from '@voxelize/core'
 import { GUI } from 'lil-gui'
 import * as THREE from 'three'
@@ -7,6 +5,8 @@ import * as THREE from 'three'
 import '@voxelize/core/dist/styles.css'
 import { voiceChat } from '~/voice'
 import { setupWorld } from '~/world'
+import { loader } from '~/routes/_auth.world.$worldId'
+import { SerializeFrom } from '@remix-run/node'
 
 const canvas = document.getElementById('canvas')
 
@@ -211,25 +211,6 @@ const peers = new VOXELIZE.Peers(controls.object)
 
 peers.createPeer = createCharacter
 
-
-
-peers.onPeerJoin = (id) => {
-    setTimeout(() => {
-        const peer = peers.getPeerById(id)
-        if (!peer) return
-        peer.userData ||= {}
-        peer.userData.id = id
-    }, 1000)
-
-    // setTimeout(() => {
-    //     chat.onChat({
-    //         type: 'system',
-    //         body: `${peer.nametag.text} $${grayReplacement}$has joined the game`,
-    //     })
-    //     // some arbitrary number to wait until nametag is stable
-    // }, 1000)
-}
-
 peers.onPeerLeave = (_, peer) => {
     // chat.onChat({
     //     type: 'system',
@@ -265,9 +246,7 @@ network.register(world).register(peers)
 
 const events = new VOXELIZE.Events()
 
-
 network.register(events)
-
 
 /* -------------------------------------------------------------------------- */
 /*                               MAIN GAME LOOPS                              */
@@ -308,13 +287,17 @@ export const voxelizeState = {
     mainCharacter,
 }
 
-export async function start() {
-    animate()
+export async function start(data: SerializeFrom<typeof loader>) {
+    const worldId = data?.world?.id
+    const hostUserId = data?.world?.createdByUserId
+    const userId = data?.userId
 
+    animate()
+    network.setID(userId)
     await network.connect(
         process.env.PUBLIC_SERVER_URL || 'https://minecord-rust-server.fly.dev',
     )
-    await network.join('terrain')
+    await network.join(worldId || '')
     await world.initialize()
     await setupWorld(world)
 
@@ -323,7 +306,20 @@ export async function start() {
     world.time = 0.5 * 24_000
     world.renderRadius = 8
 
-    await voiceChat()
+    await voiceChat({ isInitializer: userId === hostUserId })
+
+    peers.onPeerJoin = (id) => {
+        if (id === userId) return
+        if (id === hostUserId) {
+            voiceChat({ isInitializer: userId === hostUserId })
+        }
+        setTimeout(() => {
+            const peer = peers.getPeerById(id)
+            if (!peer) return
+            peer.userData ||= {}
+            peer.userData.id = id
+        }, 1000)
+    }
 
     events.on('stuff', (payload) => {
         console.log('stuff', payload)

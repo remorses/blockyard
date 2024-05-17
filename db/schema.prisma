@@ -241,6 +241,7 @@ model users {
   one_time_tokens             one_time_tokens[]
   sessions                    sessions[]
   orgsUsers                   OrgsUsers[]
+  World                       World[]
 
   @@index([instance_id])
   @@index([is_anonymous])
@@ -309,11 +310,13 @@ model Org {
 }
 
 model World {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  orgId     String
-  org       Org      @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  orgId           String
+  createdByUserId String   @db.Uuid
+  user            users    @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  org             Org      @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
 
   @@schema("public")
 }

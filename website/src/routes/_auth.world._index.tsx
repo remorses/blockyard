@@ -76,6 +76,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const world = await prisma.world.create({
         data: {
+            createdByUserId: userId,
             orgId,
         },
     })

@@ -9,6 +9,7 @@ import { useEffect } from 'react'
 import { MineCord } from '~/components/MineCord.client'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
 import { prisma } from 'db/prisma'
+import { serverApi } from '~/lib/rest'
 
 export const meta: MetaFunction = () => {
     return [
@@ -24,13 +25,14 @@ const sub = () => {
 export let loader = async ({ request, params }: LoaderFunctionArgs) => {
     const { worldId: worldId } = params
     console.log('Incoming params ', params)
-    const { supabase, headers, session } = await getSupabaseWithSessionHeaders({
-        request,
-    })
+    const { supabase, userId, headers, session } =
+        await getSupabaseWithSessionHeaders({
+            request,
+        })
 
-    if (!session) {
-        return redirect('/login', { headers })
-    }
+    // if (!session) {
+    //     return redirect('/login', { headers })
+    // }
 
     if (!worldId) {
         return redirect('/404', { headers })
@@ -43,10 +45,16 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
             },
         }),
     ])
+    if (!world) {
+        return redirect('/world', { headers })
+    }
+    await serverApi.upsertWorld({ worldId })
 
     return json(
         {
             world,
+            userId,
+            // world,
             //
         },
         { headers },
