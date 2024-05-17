@@ -11,7 +11,7 @@ import {
 import { useEffect } from 'react'
 import { MineCord } from '~/components/MineCord.client'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
-import { Form, useActionData, useLoaderData } from '@remix-run/react'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import {
     Button,
     TextInput,
@@ -59,9 +59,11 @@ export async function action({ request }: ActionFunctionArgs) {
     if (errors) {
         return json({ errors, defaultValues: {} })
     }
-    let org = await prisma.org.findFirst({
-        where: { users: { some: { userId } } },
-    })
+    let [org] = await Promise.all([
+        prisma.org.findFirst({
+            where: { users: { some: { userId } } },
+        }),
+    ])
     let orgId = org?.orgId as string
     if (!org) {
         org = await prisma.org.create({
@@ -91,17 +93,28 @@ export async function action({ request }: ActionFunctionArgs) {
 export let loader = async ({ request, params }: LoaderFunctionArgs) => {
     const { worldId: worldId } = params
     console.log('Incoming params ', params)
-    const { supabase, headers, redirectTo, session } =
+    const { supabase, userId, headers, redirectTo, session } =
         await getSupabaseWithSessionHeaders({
             request,
         })
 
     if (redirectTo) {
-        return redirectTo
+        throw redirectTo
     }
+
+    let [org, worlds] = await Promise.all([
+        prisma.org.findFirst({
+            where: { users: { some: { userId } } },
+        }),
+        prisma.world.findMany({
+            where: { createdByUserId: userId },
+        }),
+    ])
+    console.log({ org, worlds })
 
     return json(
         {
+            worlds,
             //
         },
         { headers },
@@ -109,7 +122,7 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
 }
 
 export default function Page() {
-    const {} = useLoaderData<typeof loader>()
+    const { worlds } = useLoaderData<typeof loader>()
     const actionData = useActionData<typeof action>()
     const {
         handleSubmit,
@@ -121,39 +134,61 @@ export default function Page() {
         resolver,
     })
 
+    if (!worlds.length) {
+        return (
+            <div className='flex flex-col items-center pt-12'>
+                <Window className='w-[700px] mx-auto'>
+                    <WindowHeader>Create New World</WindowHeader>
+                    <WindowContent>
+                        <Form
+                            method='POST'
+                            onSubmit={handleSubmit}
+                            className='flex-col gap-6 flex'
+                        >
+                            <Button
+                                type='submit'
+                                {...register('option', { value: 'create' })}
+                            >
+                                Create World
+                            </Button>
+                            <Separator />
+                            <div className=''>or join an existing world</div>
+                            <div className='flex items-stretch gap-4'>
+                                <Button
+                                    type='submit'
+                                    {...register('option', { value: 'join' })}
+                                >
+                                    Join World
+                                </Button>
+                                <TextInput
+                                    placeholder='world code'
+                                    variant='flat'
+                                    {...register('worldName', {})}
+                                />
+                            </div>
+                            {isSubmitting && <ProgressBarIncrementing />}
+                        </Form>
+                    </WindowContent>
+                </Window>
+            </div>
+        )
+    }
     return (
         <div className='flex flex-col items-center pt-12'>
             <Window className='w-[700px] mx-auto'>
-                <WindowHeader>Create New World</WindowHeader>
+                <WindowHeader>Your Worlds</WindowHeader>
                 <WindowContent>
-                    <Form
-                        method='POST'
-                        onSubmit={handleSubmit}
-                        className='flex-col gap-6 flex'
-                    >
-                        <Button
-                            type='submit'
-                            {...register('option', { value: 'create' })}
-                        >
-                            Create World
-                        </Button>
-                        <Separator />
-                        <div className=''>or join an existing world</div>
-                        <div className='flex items-stretch gap-4'>
-                            <Button
-                                type='submit'
-                                {...register('option', { value: 'join' })}
-                            >
-                                Join World
-                            </Button>
-                            <TextInput
-                                placeholder='world code'
-                                variant='flat'
-                                {...register('worldName', {})}
-                            />
-                        </div>
-                        {isSubmitting && <ProgressBarIncrementing />}
-                    </Form>
+                    <div className='flex flex-col gap-4'>
+                        {worlds.map((world) => (
+                            <div key={world.id} className='flex flex-col gap-4'>
+                                <div>{world.id}</div>
+                                {/* <div>{world.createdByUserId}</div> */}
+                                <Link to={`/world/${world.id}`}>
+                                    <Button>Join World</Button>
+                                </Link>
+                            </div>
+                        ))}
+                    </div>
                 </WindowContent>
             </Window>
         </div>
