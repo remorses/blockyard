@@ -14,7 +14,7 @@
     "devDependencies": {
         "@changesets/cli": "^2.27.1",
         "@docusaurus/tsconfig": "^3.3.2",
-        "@xmorse/deployment-utils": "^0.1.4",
+        "@xmorse/deployment-utils": "^0.1.5",
         "prettier": "^3.2.5",
         "tsx": "^4.7.2",
         "typescript": "^5.4.5",

@@ -30,6 +30,7 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
 
         ssr: {
             noExternal: building ? true : undefined,
+            external: ['@prisma/client'],
         },
         legacy: {
             proxySsrExternalModules: true,
@@ -42,7 +43,7 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
                     replacement: '@voxelize/core/dist/index.js',
                 },
             ],
-            
+
             // setupFiles: ['@vitest/web-worker'],
 
             exclude: [

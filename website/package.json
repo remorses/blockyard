@@ -20,6 +20,7 @@
         "@hookform/resolvers": "^3.3.4",
         "@nextui-org/react": "^2.3.6",
         "@nextui-org/theme": "^2.2.3",
+        "@prisma/client": "^5.13.0",
         "@react95/core": "^7.0.2",
         "@remix-run/node": "^2.9.2",
         "@remix-run/react": "^2.9.2",
