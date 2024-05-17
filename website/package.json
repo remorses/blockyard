@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "build:dev": "doppler run -c dev -- remix vite:build",
-        "build": "remix vite:build && pnpm copy-prisma",
+        "build": "doppler run -- remix vite:build && pnpm copy-prisma",
         "copy-prisma": "cp ../db/schema.prisma ./build/ && doppler run -- pnpm prisma generate --schema build/schema.prisma",
         "test": "doppler run -- vitest",
         "dev": "doppler run --preserve-env -- remix vite:dev --port 3467",
@@ -13,7 +13,7 @@
         "fly": "fly -a minecord-website ",
         "deployment": "tsx scripts/deploy.ts",
         "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-        "start": "PORT=3467 remix-serve ./build/server/index.js",
+        "start": "PORT=3467 doppler run -- remix-serve ./build/server/index.js",
         "typecheck": "tsc"
     },
     "dependencies": {
