@@ -203,6 +203,7 @@ export async function setupWorld(world: VOXELIZE.World) {
 
   diagonalFaces.forEach((face) => {
     const mat = world.getBlockFaceMaterial("Grass", face);
+    if (!mat) return
     mat.depthWrite = false;
   });
 

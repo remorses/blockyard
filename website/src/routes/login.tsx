@@ -1,14 +1,13 @@
-import { Button } from 'react95'
 import type { LoaderFunctionArgs } from '@remix-run/node'
+import { Button } from 'react95'
 
 import { json, redirect } from '@remix-run/node'
 import { useOutletContext } from '@remix-run/react'
-import { Googl } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { Windows95Provider } from '~/components/95'
 import { env } from '~/lib/env'
 import { SupabaseOutletContext } from '~/lib/supabase'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
-import { Windows95Provider } from '~/components/95'
 
 export let loader = async ({ request }: LoaderFunctionArgs) => {
     const { headers, session } = await getSupabaseWithSessionHeaders({
