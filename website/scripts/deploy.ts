@@ -9,19 +9,26 @@ import path from 'path'
 async function main() {
     const stage = getCurrentStage()
     const env = await getDopplerEnv({ stage, project: 'website' })
-    await Promise.all([
-        shell(`pnpm build`, {
-            env,
-        }),
-    ])
+    // await Promise.all([
+    //     shell(`pnpm build`, {
+    //         env,
+    //     }),
+    // ])
     await deployFly({
         appName: 'minecord-website',
         port: 3000,
+        buildRemotely: true,
         dockerfile: 'Dockerfile',
         minInstances: 1,
+        forceHttps: false,
         maxInstances: 1,
-        healthCheckPath: '/health',
+        healthCheckPath: '/api/health',
         memorySize: '512mb',
+        env: {
+            ...env,
+            NODE_ENV: 'production',
+            PORT: '3000',
+        },
         regions: ['iad'],
     })
 }
