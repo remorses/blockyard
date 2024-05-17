@@ -30,7 +30,7 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
 
         ssr: {
             noExternal: building ? true : undefined,
-            external: ['@prisma/client'],
+            external: building ? ['@prisma/client'] : undefined,
         },
         legacy: {
             proxySsrExternalModules: true,

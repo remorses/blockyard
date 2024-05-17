@@ -202,8 +202,10 @@ export default function Page() {
                                         readOnly
                                     />
                                     {/* <div>{world.createdByUserId}</div> */}
-                                    <Link to={`/world/${world.id}`}>
-                                        <Button primary>
+                                    <Link
+                                        to={getWorldUrl({ worldId: world.id })}
+                                    >
+                                        <Button type='button' primary>
                                             {navigation.state === 'loading' && (
                                                 <Hourglass className='mr-2 w-6' />
                                             )}

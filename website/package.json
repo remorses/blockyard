@@ -6,7 +6,7 @@
     "scripts": {
         "build:dev": "doppler run -c dev -- remix vite:build",
         "build": "remix vite:build && pnpm copy-prisma",
-        "copy-prisma": "cp ../db/schema.prisma ./build/",
+        "copy-prisma": "cp ../db/schema.prisma ./build/ && doppler run -- pnpm prisma generate --schema build/schema.prisma",
         "test": "doppler run -- vitest",
         "dev": "doppler run --preserve-env -- remix vite:dev --port 3467",
         "dev:prod": "PUBLIC_SERVER_URL=https://minecord-rust-server.fly.dev pnpm dev",
@@ -50,7 +50,7 @@
         "remix-hook-form": "^4.3.1",
         "simple-peer": "^9.11.1",
         "styled-components": "^6.1.11",
-        "three": "^0.158.0",
+        "three": "^0.164.1",
         "unframer": "^2.3.0",
         "vite-plugin-glslify": "^2.1.0",
         "vite-plugin-node-polyfills": "^0.21.0",
