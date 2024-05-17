@@ -27,9 +27,9 @@ export const useSupabase = ({ session }) => {
         } = supabase.auth.onAuthStateChange((event, session) => {
             console.log('Auth event happened: ', event, session)
 
-            if (session?.access_token !== serverAccessToken) {
+            if (serverAccessToken && session?.access_token !== serverAccessToken) {
                 // call loaders
-                revalidator.revalidate()
+                // revalidator.revalidate()
             }
         })
 

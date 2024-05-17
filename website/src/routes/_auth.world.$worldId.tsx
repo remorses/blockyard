@@ -46,6 +46,7 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
         }),
     ])
     if (!world) {
+        console.log('World not found')
         return redirect('/world', { headers })
     }
     await serverApi.upsertWorld({ worldId })

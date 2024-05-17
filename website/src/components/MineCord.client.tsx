@@ -21,6 +21,7 @@ export function MineCord() {
             }
         })
         return () => {
+            started = false
             destroy()
         }
     }, [])
@@ -59,16 +60,18 @@ function InviteUsersModal({ onClose }) {
     const link = getWorldUrl({ worldId: world.id })
 
     return (
-        <Window className='w-[700px] min-h-[400px] mx-auto'>
+        <Window className='w-[700px] mx-auto'>
             <WindowHeader className='flex justify-start items-center'>
-                to invite users, send them this link
+                invite people to your world
                 <div className='grow'></div>
                 <Button onClick={onClose}>
                     <XIcon className='w-4' />
                 </Button>
             </WindowHeader>
             <WindowContent className='flex flex-col gap-4'>
-                <div className='flex flex-col gap-4'>hello</div>
+                <div className='flex flex-col gap-4'>
+                    You can incite your friends sending the link below
+                </div>
                 <div className='grow'></div>
                 <TextInput variant='flat' value={link} fullWidth readOnly />
                 <Button primary onClick={onClose} fullWidth>

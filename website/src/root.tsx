@@ -1,4 +1,5 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
+import '@voxelize/core/dist/styles.css'
 
 import './global.css'
 import {

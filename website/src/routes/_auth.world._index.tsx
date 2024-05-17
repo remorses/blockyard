@@ -203,7 +203,7 @@ export default function Page() {
                                     />
                                     {/* <div>{world.createdByUserId}</div> */}
                                     <Link
-                                        to={getWorldUrl({ worldId: world.id })}
+                                        to={`/world/${world.id}`}
                                     >
                                         <Button type='button' primary>
                                             {navigation.state === 'loading' && (
