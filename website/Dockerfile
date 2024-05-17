@@ -5,7 +5,7 @@ FROM --platform=linux/amd64 node:18-slim
 WORKDIR /app
 
 # install prisma
-ARG PRISMA_FILE=./.next/schema.prisma
+ARG PRISMA_FILE=./build/schema.prisma
 ARG PRISMA_VERSION=5.13.0
 RUN apt update && apt install openssl ca-certificates -y \
     && npm i --no-cache -g prisma@$PRISMA_VERSION \
