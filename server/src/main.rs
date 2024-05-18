@@ -1,12 +1,13 @@
+use crate::videoroom::{rooms_registry::RoomsRegistry, ws_index_rooms};
 use mediasoup::worker_manager::WorkerManager;
-use crate::videoroom::rooms_registry::RoomsRegistry;
 
 use serde::{Deserialize, Serialize};
+use videoroom::rooms_registry;
 use voxelize::{
     Block, Event, FlatlandStage, Info, Registry, Server, Voxelize, World, WorldConfig, WsSession,
 };
-mod worlds;
 mod videoroom;
+mod worlds;
 
 use worlds::terrain::setup_terrain_world;
 mod registry;
@@ -32,12 +33,12 @@ async fn ws_route(
     stream: web::Payload,
     srv: web::Data<Addr<Server>>,
     secret: web::Data<Option<String>>,
-    options: Query<HashMap<String, String>>,
+    query: Query<HashMap<String, String>>,
 ) -> Result<HttpResponse, Error> {
     if !secret.is_none() {
         let error = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "wrong secret!");
 
-        if let Some(client_secret) = options.get("secret") {
+        if let Some(client_secret) = query.get("secret") {
             if *client_secret != secret.as_deref().unwrap() {
                 warn!(
                     "An attempt to join with a wrong secret was made: {}",
@@ -51,13 +52,13 @@ async fn ws_route(
         }
     }
 
-    let id = if let Some(id) = options.get("client_id") {
+    let id = if let Some(id) = query.get("client_id") {
         id.to_owned()
     } else {
         "".to_owned()
     };
 
-    let is_transport = options.contains_key("is_transport");
+    let is_transport = query.contains_key("is_transport");
 
     if is_transport {
         info!("A new transport server has connected.");
@@ -127,7 +128,7 @@ impl Handler<InstantiateRequest> for Server {
     }
 }
 
-async fn newWorldApi(
+async fn new_world_api(
     voxelize_server: web::Data<Addr<Server>>,
     payload: web::Json<InstantiateRequest>,
 ) -> impl Responder {
@@ -142,7 +143,33 @@ async fn newWorldApi(
     HttpResponse::Ok().json(response)
 }
 
-pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    let dirt = Block::new("Dirt").id(1).build();
+    let stone = Block::new("Stone").id(2).build();
+    let grass_block = Block::new("Grass Block").id(3).build();
+
+    let config = WorldConfig::new().build();
+
+    let mut world = World::new("tutorial", &config);
+
+    {
+        let mut pipeline = world.pipeline_mut();
+        pipeline.add_stage(
+            FlatlandStage::new()
+                .add_soiling(stone.id, 10)
+                .add_soiling(dirt.id, 2)
+                .add_soiling(grass_block.id, 1),
+        )
+    }
+
+    let registry = setup_registry();
+
+    let mut voxel_server = Server::new().port(4000).registry(&registry).build();
+
+    voxel_server.set_action_handle("test", |event, _server| {
+        println!("Received event: {:?}", event);
+    });
     voxel_server.prepare();
     voxel_server.started = true;
 
@@ -173,7 +200,8 @@ pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
             }))
             .route("/", web::get().to(index))
             .route("/ws/", web::get().to(ws_route))
-            .route("/api/upsert-world", web::post().to(newWorldApi))
+            .route("/ws-room", web::get().to(ws_index_rooms))
+            .route("/api/upsert-world", web::post().to(new_world_api))
             .route("/info", web::get().to(info));
 
         if serve.is_empty() {
@@ -182,43 +210,10 @@ pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
             app.service(Files::new("/", serve).show_files_listing())
         }
     })
+    .workers(2)
     .bind((addr.to_owned(), port.to_owned()))?;
 
     info!("🍄  Voxelize backend running on http://{}:{}", addr, port);
 
     srv.run().await
-}
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    let dirt = Block::new("Dirt").id(1).build();
-    let stone = Block::new("Stone").id(2).build();
-    let grass_block = Block::new("Grass Block").id(3).build();
-
-    let config = WorldConfig::new().build();
-
-    let mut world = World::new("tutorial", &config);
-
-    {
-        let mut pipeline = world.pipeline_mut();
-        pipeline.add_stage(
-            FlatlandStage::new()
-                .add_soiling(stone.id, 10)
-                .add_soiling(dirt.id, 2)
-                .add_soiling(grass_block.id, 1),
-        )
-    }
-
-    let registry = setup_registry();
-
-    let mut server = Server::new().port(4000).registry(&registry).build();
-
-    // server
-    //     .add_world(setup_terrain_world())
-    //     .expect("Failed to add world to server");
-
-    server.set_action_handle("test", |event, _server| {
-        println!("Received event: {:?}", event);
-    });
-    run(server).await
 }

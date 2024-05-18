@@ -6,6 +6,7 @@ import { voiceChat } from '~/voice'
 import { setupWorld } from '~/world'
 import { loader } from '~/routes/_auth.world.$worldId'
 import { SerializeFrom } from '@remix-run/node'
+import { startCall, defaultMediasoupWsTransport } from '~/mediasoup'
 
 export let voxelizeState: {
     sharingScreen: boolean
@@ -317,13 +318,28 @@ export async function start(data: SerializeFrom<typeof loader>) {
         events,
         mainCharacter,
     }
-    await voiceChat({ isInitializer: userId === hostUserId })
+    let roomId = '123e4567-e89b-12d3-a456-426614174000'
+    const preview = document.createElement('audio')
+    preview.muted = true
+    preview.controls = true
+    const container = document.getElementById('top-level-root')
+    container.appendChild(preview)
+    const { leave } = await startCall({
+        callType: 'audioOnly',
+        preview,
+        ...defaultMediasoupWsTransport({ roomId }),
+    })
+    // startCall({
+    //     callType: 'shareScreen',
+    //     preview: document.getElementById('screen') as any,
+    //     ...defaultMediasoupWsTransport({ roomId: roomId.slice(0, -1) + '1' }),
+    // })
 
     function onVideoShareKeyPress(e: KeyboardEvent) {
         if (voxelizeState.sharingScreen) return
         if (e.key === 'v') {
             const video = new ShareScreenVideo()
-            video.share()
+
             voxelizeState.world.add(video.mesh)
         }
     }
@@ -332,7 +348,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
     peers.onPeerJoin = (id) => {
         if (id === userId) return
         if (id === hostUserId) {
-            voiceChat({ isInitializer: userId === hostUserId })
+            // voiceChat({ isInitializer: userId === hostUserId })
         }
         setTimeout(() => {
             const peer = peers.getPeerById(id)
@@ -344,6 +360,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     return () => {
         mainCharacter.remove()
+        leave()
         window.removeEventListener('keydown', onVideoShareKeyPress)
     }
 }

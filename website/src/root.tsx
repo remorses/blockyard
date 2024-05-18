@@ -48,6 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <NextUIProvider className='h-full'>{children}</NextUIProvider>
                 <ScrollRestoration />
                 <Scripts />
+                <div id='top-level-root' className='top-level-debug-data' />
             </body>
         </html>
     )

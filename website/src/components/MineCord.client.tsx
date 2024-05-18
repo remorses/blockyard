@@ -28,8 +28,16 @@ export function MineCord() {
     return (
         <div id='app'>
             <canvas id='canvas'></canvas>
+            {/* <audio
+                // className='hidden'
+                id='preview-audio-self'
+                key='preview-audio-self'
+                muted
+                controls
+            ></audio> */}
+
             <video
-                id='video'
+                id='screen-video'
                 style={{ display: 'none' }}
                 autoPlay
                 // src='/sample.mp4'
@@ -50,7 +58,10 @@ function TopLevelUi() {
         return
     }
     return (
-        <div className='h-screen flex flex-col items-center  justify-center w-screen fixed inset-0'>
+        <div
+            id='top-level-ui'
+            className='h-screen  flex flex-col items-center  justify-center w-screen fixed inset-0'
+        >
             {isInviteOpen && (
                 <InviteUsersModal
                     onClose={() => {

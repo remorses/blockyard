@@ -94,17 +94,17 @@ mod room {
                     settings.log_level = WorkerLogLevel::Debug;
                     settings.log_tags = vec![
                         WorkerLogTag::Info,
-                        WorkerLogTag::Ice,
-                        WorkerLogTag::Dtls,
-                        WorkerLogTag::Rtp,
-                        WorkerLogTag::Srtp,
-                        WorkerLogTag::Rtcp,
-                        WorkerLogTag::Rtx,
-                        WorkerLogTag::Bwe,
-                        WorkerLogTag::Score,
-                        WorkerLogTag::Simulcast,
-                        WorkerLogTag::Svc,
-                        WorkerLogTag::Sctp,
+                        // WorkerLogTag::Ice,
+                        // WorkerLogTag::Dtls,
+                        // WorkerLogTag::Rtp,
+                        // WorkerLogTag::Srtp,
+                        // WorkerLogTag::Rtcp,
+                        // WorkerLogTag::Rtx,
+                        // WorkerLogTag::Bwe,
+                        // WorkerLogTag::Score,
+                        // WorkerLogTag::Simulcast,
+                        // WorkerLogTag::Svc,
+                        // WorkerLogTag::Sctp,
                         WorkerLogTag::Message,
                     ];
 
@@ -228,7 +228,7 @@ mod room {
     }
 }
 
-mod rooms_registry {
+pub mod rooms_registry {
     use crate::videoroom::room::{Room, RoomId, WeakRoom};
     use async_lock::Mutex;
     use mediasoup::prelude::*;
@@ -319,7 +319,7 @@ mod rooms_registry {
 
 mod participant {
     use crate::videoroom::participant::messages::{
-        ClientMessage, InternalMessage, ServerMessage, TransportOptions,
+        ClientRoomMessage, InternalMessage, ServerRoomMessage, TransportOptions,
     };
     use crate::videoroom::room::Room;
     use actix::prelude::*;
@@ -355,7 +355,7 @@ mod participant {
         #[serde(tag = "action")]
         #[rtype(result = "()")]
         #[allow(clippy::large_enum_variant)]
-        pub enum ServerMessage {
+        pub enum ServerRoomMessage {
             /// Initialization message with consumer/producer transport options and Router's RTP
             /// capabilities necessary to establish WebRTC transport connection client-side
             #[serde(rename_all = "camelCase")]
@@ -404,7 +404,7 @@ mod participant {
         #[derive(Deserialize, Message)]
         #[serde(tag = "action")]
         #[rtype(result = "()")]
-        pub enum ClientMessage {
+        pub enum ClientRoomMessage {
             /// Client-side initialization with its RTP capabilities, in this simple case we expect
             /// those to match server Router's RTP capabilities
             #[serde(rename_all = "camelCase")]
@@ -549,7 +549,7 @@ mod participant {
             // We know that both consumer and producer transports will be used, so we sent server
             // information about both in an initialization message alongside with router
             // capabilities to the client right after WebSocket connection is established
-            let server_init_message = ServerMessage::Init {
+            let server_init_message = ServerRoomMessage::Init {
                 room_id: self.room.id(),
                 participant_id: self.id,
                 consumer_transport_options: TransportOptions {
@@ -579,7 +579,7 @@ mod participant {
                     if &own_participant_id == participant_id {
                         return;
                     }
-                    address.do_send(ServerMessage::ProducerAdded {
+                    address.do_send(ServerRoomMessage::ProducerAdded {
                         participant_id: *participant_id,
                         producer_id: producer.id(),
                     });
@@ -595,7 +595,7 @@ mod participant {
                     if &own_participant_id == participant_id {
                         return;
                     }
-                    address.do_send(ServerMessage::ProducerRemoved {
+                    address.do_send(ServerRoomMessage::ProducerRemoved {
                         participant_id: *participant_id,
                         producer_id: *producer_id,
                     });
@@ -604,7 +604,7 @@ mod participant {
 
             // Notify client about any producers that already exist in the room
             for (participant_id, producer_id) in self.room.get_all_producers() {
-                address.do_send(ServerMessage::ProducerAdded {
+                address.do_send(ServerRoomMessage::ProducerAdded {
                     participant_id,
                     producer_id,
                 });
@@ -626,7 +626,7 @@ mod participant {
                     ctx.pong(&msg);
                 }
                 Ok(ws::Message::Pong(_)) => {}
-                Ok(ws::Message::Text(text)) => match serde_json::from_str::<ClientMessage>(&text) {
+                Ok(ws::Message::Text(text)) => match serde_json::from_str::<ClientRoomMessage>(&text) {
                     Ok(message) => {
                         // Parse JSON into an enum and just send it back to the actor to be
                         // processed by another handler below, it is much more convenient to just
@@ -649,23 +649,23 @@ mod participant {
         }
     }
 
-    impl Handler<ClientMessage> for ParticipantConnection {
+    impl Handler<ClientRoomMessage> for ParticipantConnection {
         type Result = ();
 
-        fn handle(&mut self, message: ClientMessage, ctx: &mut Self::Context) {
+        fn handle(&mut self, message: ClientRoomMessage, ctx: &mut Self::Context) {
             match message {
-                ClientMessage::Init { rtp_capabilities } => {
+                ClientRoomMessage::Init { rtp_capabilities } => {
                     // We need to know client's RTP capabilities, those are sent using
                     // initialization message and are stored in connection struct for future use
                     self.client_rtp_capabilities.replace(rtp_capabilities);
                 }
-                ClientMessage::ProducerRemoved {
+                ClientRoomMessage::ProducerRemoved {
                     participant_id,
                     producer_id,
                 } => {
                     self.room.remove_participant(&participant_id);
                 }
-                ClientMessage::ConnectProducerTransport { dtls_parameters } => {
+                ClientRoomMessage::ConnectProducerTransport { dtls_parameters } => {
                     let participant_id = self.id;
                     let address = ctx.address();
                     let transport = self.transports.producer.clone();
@@ -678,7 +678,7 @@ mod participant {
                             .await
                         {
                             Ok(_) => {
-                                address.do_send(ServerMessage::ConnectedProducerTransport);
+                                address.do_send(ServerRoomMessage::ConnectedProducerTransport);
                                 println!(
                                     "[participant_id {participant_id}] Producer transport connected"
                                 );
@@ -690,7 +690,7 @@ mod participant {
                         }
                     });
                 }
-                ClientMessage::Produce {
+                ClientRoomMessage::Produce {
                     kind,
                     rtp_parameters,
                 } => {
@@ -707,7 +707,7 @@ mod participant {
                         {
                             Ok(producer) => {
                                 let id = producer.id();
-                                address.do_send(ServerMessage::Produced { id });
+                                address.do_send(ServerRoomMessage::Produced { id });
                                 // Add producer to the room so that others can consume it
                                 room.add_producer(participant_id, producer.clone());
                                 // Producer is stored in a hashmap since if we don't do it, it will
@@ -726,7 +726,7 @@ mod participant {
                         }
                     });
                 }
-                ClientMessage::ConnectConsumerTransport { dtls_parameters } => {
+                ClientRoomMessage::ConnectConsumerTransport { dtls_parameters } => {
                     let participant_id = self.id;
                     let address = ctx.address();
                     let transport = self.transports.consumer.clone();
@@ -737,7 +737,7 @@ mod participant {
                             .await
                         {
                             Ok(_) => {
-                                address.do_send(ServerMessage::ConnectedConsumerTransport);
+                                address.do_send(ServerRoomMessage::ConnectedConsumerTransport);
                                 println!(
                                     "[participant_id {participant_id}] Consumer transport connected"
                                 );
@@ -751,7 +751,7 @@ mod participant {
                         }
                     });
                 }
-                ClientMessage::Consume { producer_id } => {
+                ClientRoomMessage::Consume { producer_id } => {
                     let participant_id = self.id;
                     let address = ctx.address();
                     let transport = self.transports.consumer.clone();
@@ -776,7 +776,7 @@ mod participant {
                                 let id = consumer.id();
                                 let kind = consumer.kind();
                                 let rtp_parameters = consumer.rtp_parameters().clone();
-                                address.do_send(ServerMessage::Consumed {
+                                address.do_send(ServerRoomMessage::Consumed {
                                     id,
                                     producer_id,
                                     kind,
@@ -798,7 +798,7 @@ mod participant {
                         }
                     });
                 }
-                ClientMessage::ConsumerResume { id } => {
+                ClientRoomMessage::ConsumerResume { id } => {
                     if let Some(consumer) = self.consumers.get(&id).cloned() {
                         let participant_id = self.id;
                         actix::spawn(async move {
@@ -830,10 +830,10 @@ mod participant {
 
     /// Simple handler that will transform typed server messages into JSON and send them over to the
     /// client over WebSocket connection
-    impl Handler<ServerMessage> for ParticipantConnection {
+    impl Handler<ServerRoomMessage> for ParticipantConnection {
         type Result = ();
 
-        fn handle(&mut self, message: ServerMessage, ctx: &mut Self::Context) {
+        fn handle(&mut self, message: ServerRoomMessage, ctx: &mut Self::Context) {
             ctx.text(serde_json::to_string(&message).unwrap());
         }
     }
@@ -890,14 +890,14 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct QueryParameters {
+pub struct QueryParameters {
     room_id: Option<RoomId>,
 }
 
 /// Function that receives HTTP request on WebSocket route and upgrades it to WebSocket connection.
 ///
 /// See https://actix.rs/docs/websockets/ for official `actix-web` documentation.
-async fn ws_index(
+pub async fn ws_index_rooms(
     query_parameters: Query<QueryParameters>,
     request: HttpRequest,
     worker_manager: Data<WorkerManager>,
@@ -912,6 +912,8 @@ async fn ws_index(
         }
         None => rooms_registry.create_room(&worker_manager).await,
     };
+
+    log::info!("Room created");
 
     let room = match room {
         Ok(room) => room,
