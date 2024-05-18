@@ -15,9 +15,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
         console.log('Error: auth callback ', error)
 
-        if (!error) {
-            return redirect(next, { headers })
+        if (error) {
+            console.log('Error: auth callback ', error)
         }
+        return redirect(next, { headers })
     }
 
     // return the user to an error page with instructions

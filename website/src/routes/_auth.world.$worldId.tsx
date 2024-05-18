@@ -30,9 +30,12 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
             request,
         })
 
-    // if (!session) {
-    //     return redirect('/login', { headers })
-    // }
+    if (!session) {
+        const u = new URL('/login', request.url)
+        u.searchParams.set('next', request.url)
+
+        return redirect(u.toString(), { headers })
+    }
 
     if (!worldId) {
         return redirect('/404', { headers })

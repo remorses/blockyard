@@ -2,7 +2,7 @@ import type { LoaderFunctionArgs } from '@remix-run/node'
 import { Button } from 'react95'
 
 import { json, redirect } from '@remix-run/node'
-import { useOutletContext } from '@remix-run/react'
+import { useOutletContext, useSearchParams } from '@remix-run/react'
 import toast from 'react-hot-toast'
 import { Windows95Provider } from '~/components/95'
 import { env } from '~/lib/env'
@@ -32,16 +32,20 @@ export default function Login() {
 export function LoginWithGoogle() {
     const { supabase } = useOutletContext<SupabaseOutletContext>()
 
+    const [searchParams] = useSearchParams()
     const handleSignIn = async () => {
+        const u = new URL('/api/auth/callback', env.PUBLIC_URL)
+        if (searchParams.get('next')) {
+            u.searchParams.set('next', searchParams.get('next'))
+        }
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
 
             options: {
-                redirectTo: `${env.PUBLIC_URL}/api/auth/callback`,
-                
+                redirectTo: u.toString(),
             },
         })
-        
+
         if (error) {
             console.log('Sign in ', error)
             toast.error(error.message)
