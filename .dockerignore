@@ -1,0 +1,11 @@
+**/node_modules
+**/worlds
+**/world
+**/target
+**/scripts
+
+
+voxelize/**
+!voxelize/server
+!voxelize/Cargo*
+!voxelize/build.rs

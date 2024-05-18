@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+mediasoup="0.17.0"
 voxelize = { path = "../voxelize" }
 actix = "0.13.3"
-mediasoup="0.17.0"
 actix-web = "4.5.1"
 specs = { version = "0.20.0", features = ["specs-derive", "serde"] }
 serde = { version = "1.0.198", features = ["derive"] }
