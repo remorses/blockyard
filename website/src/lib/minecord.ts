@@ -237,16 +237,17 @@ export async function start(data: SerializeFrom<typeof loader>) {
     /* -------------------------------------------------------------------------- */
     /*                                  DEBUGGING                                 */
     /* -------------------------------------------------------------------------- */
-    const debug = new VOXELIZE.Debug(document.body)
+    // const debug = new VOXELIZE.Debug(document.body, {})
 
-    debug.registerDisplay('Current time', world, 'time', (time) =>
-        Number(time).toFixed(2),
-    )
+    // debug.registerDisplay('Current time', world, 'time', (time) =>
+    //     Number(time).toFixed(2),
+    // )
 
-    // const gui = new GUI()
-    // gui.domElement.style.top = '10px'
+    // // const gui = new GUI()
+    // // gui.domElement.style.top = '10px'
+    // debug.visible = false
 
-    inputs.bind('j', debug.toggle)
+    // inputs.bind('j', debug.toggle)
 
     /* -------------------------------------------------------------------------- */
     /*                               NETWORK MANAGER                              */
@@ -281,7 +282,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
             )
 
             peers.update()
-            debug.update()
+            // debug.update()
         }
 
         renderer.render(world, camera)
@@ -350,7 +351,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
         if (id === hostUserId) {
             // voiceChat({ isInitializer: userId === hostUserId })
         }
-        
+
         setTimeout(() => {
             const peer = peers.getPeerById(id)
             if (!peer) return
