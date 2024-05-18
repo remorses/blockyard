@@ -1,8 +1,12 @@
+use mediasoup::worker_manager::WorkerManager;
+use crate::videoroom::rooms_registry::RoomsRegistry;
+
 use serde::{Deserialize, Serialize};
 use voxelize::{
     Block, Event, FlatlandStage, Info, Registry, Server, Voxelize, World, WorldConfig, WsSession,
 };
 mod worlds;
+mod videoroom;
 
 use worlds::terrain::setup_terrain_world;
 mod registry;
@@ -162,6 +166,8 @@ pub async fn run(mut voxel_server: Server) -> std::io::Result<()> {
             .wrap(cors)
             .app_data(web::Data::new(secret))
             .app_data(web::Data::new(server_addr.clone()))
+            .app_data(web::Data::new(WorkerManager::new()))
+            .app_data(web::Data::new(RoomsRegistry::default()))
             .app_data(web::Data::new(Config {
                 serve: serve.to_owned(),
             }))

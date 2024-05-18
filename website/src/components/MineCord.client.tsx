@@ -28,6 +28,14 @@ export function MineCord() {
     return (
         <div id='app'>
             <canvas id='canvas'></canvas>
+            <video
+                id='video'
+                style={{ display: 'none' }}
+                autoPlay
+                // src='/sample.mp4'
+                playsInline
+            ></video>
+
             <div id='crosshair' />
             <TopLevelUi />
         </div>

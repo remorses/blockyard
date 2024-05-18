@@ -36,12 +36,26 @@ export async function voiceChat({ isInitializer }) {
                 conn.send('hello!')
             })
         })
-        const onStream = (mediaStream) => {
-            const audio = new Audio()
-            audio.autoplay = true
-            // audio.muted = remoteAudioMuted[targetId]
-            audio.srcObject = mediaStream
-            audio.play()
+        const onStream = (stream: MediaStream) => {
+            const tracks = stream.getTracks()
+            const hasVideo = tracks.some((track) => track.kind === 'video')
+            if (hasVideo) {
+                const videoElem: HTMLVideoElement = document.getElementById(
+                    'video',
+                ) as any
+                if (!videoElem) {
+                    console.error('video element not found')
+                    return
+                }
+                videoElem.srcObject = stream
+                videoElem.play()
+            } else {
+                const audio = new Audio()
+                audio.autoplay = true
+                // audio.muted = remoteAudioMuted[targetId]
+                audio.srcObject = stream
+                audio.play()
+            }
 
             // audioElementsRef[call.peer] = audio
         }
@@ -74,6 +88,20 @@ export async function voiceChat({ isInitializer }) {
                 delete audioElementsRef[targetId]
             }
         })
+
+        async function shareVideo() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { width: 1280, height: 720 },
+                    // audio: false,
+                })
+                const call = peer.call(hostPeerId, stream)
+                call.on('stream', onStream)
+            } else {
+                console.error('MediaDevices interface not available.')
+            }
+        }
+        return { shareVideo }
     } catch (error) {
         console.error('voiceChat error', error)
     }

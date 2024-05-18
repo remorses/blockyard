@@ -17,7 +17,10 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
         define,
         Object.fromEntries(
             Object.entries(process.env)
-                .filter(([key]) => key.includes('PUBLIC_'))
+                .filter(
+                    ([key, v]) =>
+                        key.includes('PUBLIC_') && typeof v === 'string',
+                )
                 .map(([key, value]) => [
                     `process.env.${key}`,
                     JSON.stringify(value),
