@@ -28,21 +28,6 @@ export function MineCord() {
     return (
         <div id='app'>
             <canvas id='canvas'></canvas>
-            {/* <audio
-                // className='hidden'
-                id='preview-audio-self'
-                key='preview-audio-self'
-                muted
-                controls
-            ></audio> */}
-
-            <video
-                id='screen-video'
-                style={{ display: 'none' }}
-                autoPlay
-                // src='/sample.mp4'
-                playsInline
-            ></video>
 
             <div id='crosshair' />
             <TopLevelUi />

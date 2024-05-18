@@ -7,3 +7,12 @@ export function sleep(ms: number) {
 export function getWorldUrl({ worldId }) {
     return new URL(`/world/${worldId}`, env.PUBLIC_URL).toString()
 }
+
+export function withResolvers() {
+    let resolve, reject
+    const promise = new Promise((res, rej) => {
+        resolve = res
+        reject = rej
+    })
+    return { promise, resolve, reject }
+}

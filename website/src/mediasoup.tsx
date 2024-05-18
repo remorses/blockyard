@@ -12,6 +12,8 @@ import {
 import { ConsumerOptions } from 'mediasoup-client/lib/Consumer'
 import { Producer } from 'mediasoup-client/lib/types'
 import { env } from '~/lib/env'
+import { withResolvers } from '~/lib/utils'
+import { createOrGetShareVideo } from '~/lib/minecord'
 
 type Brand<K, T> = K & { __brand: T }
 
@@ -72,6 +74,7 @@ type ServerMessage =
 
 interface ClientInit {
     action: 'Init'
+    peerId: string
     rtpCapabilities: RtpCapabilities
 }
 
@@ -123,12 +126,12 @@ class Participant {
     readonly preview: HTMLAudioElement
     readonly mediaStream = new MediaStream()
     producerIds: string[] = []
+    peerId = ''
 
     callType: CallType
 
     constructor({
         callType,
-
         id,
     }: {
         id: ParticipantId
@@ -136,6 +139,7 @@ class Participant {
         callType: CallType
     }) {
         this.callType = callType
+        this.peerId = id
         console.log(`new participant ${id}, type: ${callType}`)
         const container = document.getElementById('top-level-root')!
         if (!container) {
@@ -149,9 +153,10 @@ class Participant {
                 this.preview.classList.add('border')
             }
         } else {
-            this.preview = document.getElementById(
-                'screen-video',
-            ) as HTMLVideoElement
+            const { mesh, video } = createOrGetShareVideo({
+                peerId: this.peerId,
+            })
+            this.preview = video
         }
 
         if (!this.preview) {
@@ -192,7 +197,7 @@ class Participant {
             this.deleteTrack(track)
         }
         this.preview.srcObject = null
-        this.preview.remove();
+        this.preview.remove()
     }
 }
 
@@ -202,12 +207,15 @@ type TwoWayMessaging = {
     onMessage: (callback: (message: ServerMessage) => void) => void
 }
 
-export function defaultMediasoupWsTransport({ roomId }): TwoWayMessaging {
+export function defaultMediaSoupWsTransport({
+    roomId,
+    peerId,
+}): TwoWayMessaging {
     const wsUrl = new URL('/ws-room', env.PUBLIC_SERVER_URL)
     wsUrl.protocol = wsUrl.protocol === 'http:' ? 'ws:' : 'wss:'
-    if (roomId) {
-        wsUrl.searchParams.set('roomId', roomId)
-    }
+
+    wsUrl.searchParams.set('roomId', roomId)
+    wsUrl.searchParams.set('peerId', peerId)
 
     const ws = new WebSocket(wsUrl.toString())
 
@@ -231,24 +239,17 @@ export function defaultMediasoupWsTransport({ roomId }): TwoWayMessaging {
 
 let debugRoom = true
 
-export async function startCall({
+export async function setupCall({
     send,
     onMessage,
+    peerId,
     close,
     callType,
-    preview: sendPreview,
 }: {
     // roomId: string;
+    peerId: string
     callType: CallType
-    preview?: HTMLAudioElement | HTMLVideoElement | null
 } & TwoWayMessaging) {
-    if (!sendPreview) {
-        throw new Error('Preview element is required')
-    }
-    sendPreview.onloadedmetadata = () => {
-        sendPreview.play()
-    }
-
     const participants = new Map<ParticipantId, Participant>()
     let producerIdToTrack = new Map<ProducerId, MediaStreamTrack>()
 
@@ -262,7 +263,6 @@ export async function startCall({
     const waitingForResponse: Map<ServerMessage['action'], Function> = new Map()
 
     function getOrCreateParticipant(id: ParticipantId): Participant {
-		
         let participant = participants.get(id)
 
         if (!participant) {
@@ -280,6 +280,7 @@ export async function startCall({
 
     let myParticipantId = '' as ParticipantId
 
+    let readyToStart = withResolvers()
     const leave = async () => {
         console.log('leaving room call')
         send({
@@ -295,8 +296,42 @@ export async function startCall({
         }
         close()
     }
+    let startCall = async (
+        sendPreview: HTMLVideoElement | HTMLAudioElement,
+    ) => {
+        if (!producerTransport) {
+            throw new Error('Producer transport is not initialized')
+        }
+        if (!sendPreview) {
+            throw new Error('Preview element is required')
+        }
+
+        mediaStream =
+            callType === 'audioOnly'
+                ? await navigator.mediaDevices.getUserMedia({
+                      audio: true,
+
+                      video: false,
+                  })
+                : await navigator.mediaDevices.getDisplayMedia({
+                      video: true,
+                  })
+
+        // const sendPreview = getPreviewElement()
+        sendPreview.srcObject = mediaStream
+        sendPreview.onloadedmetadata = () => {
+            sendPreview.play()
+        }
+        sendPreview.play()
+        // And create producers for all tracks that were previously requested
+        for (const track of mediaStream.getTracks()) {
+            producer = await producerTransport!.produce({ track })
+
+            console.log(`${track.kind} producer created:`, producer)
+        }
+    }
     const onmessage = async (message: ServerMessage) => {
-		console.log(`room message: ${message.action}`)
+        console.log(`room message: ${message.action}`)
         switch (message.action) {
             case 'Init': {
                 await device.load({
@@ -307,6 +342,7 @@ export async function startCall({
                 // Send client-side initialization message back right away
                 send({
                     action: 'Init',
+                    peerId: peerId,
                     rtpCapabilities: device.rtpCapabilities,
                 })
                 // Producer transport is needed to send audio and video to SFU
@@ -327,6 +363,7 @@ export async function startCall({
                             'ConnectedProducerTransport',
                             () => {
                                 success()
+
                                 console.log('Producer transport connected')
                             },
                         )
@@ -372,44 +409,8 @@ export async function startCall({
                         )
                     },
                 )
-                const startCall = async () => {
-                    // Request microphone and camera access, in real-world apps you may want
-                    // to do this separately so that audio-only and video-only cases are
-                    // handled nicely instead of failing completely
-                    mediaStream =
-                        callType === 'audioOnly'
-                            ? await navigator.mediaDevices.getUserMedia({
-                                  audio: true,
+                readyToStart.resolve()
 
-                                  video: false,
-                              })
-                            : await navigator.mediaDevices.getDisplayMedia({
-                                  video: true,
-                              })
-
-                    sendPreview.srcObject = mediaStream
-
-                    // And create producers for all tracks that were previously requested
-                    for (const track of mediaStream.getTracks()) {
-                        producer = await producerTransport!.produce({ track })
-
-                        console.log(`${track.kind} producer created:`, producer)
-                    }
-                }
-
-                if (callType === 'audioOnly') {
-                    await startCall()
-                    break
-                } else if (callType === 'shareScreen') {
-                    const startButton = document.querySelector('button#share')!
-                    startButton.addEventListener('click', async () => {
-                        await startCall()
-                    })
-                    let endButton = document.querySelector('button#stop-share')
-                    endButton?.addEventListener('click', leave)
-
-                    break
-                }
                 break
             }
             case 'ProducerAdded': {
@@ -502,7 +503,9 @@ export async function startCall({
                 })
         }
     })
+    await readyToStart.promise
     return {
         leave,
+        startCall,
     }
 }

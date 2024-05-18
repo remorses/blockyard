@@ -1,4 +1,4 @@
-use crate::videoroom::participant::ParticipantConnection;
+use crate::videoroom::participant::{ParticipantConnection, ParticipantId};
 use crate::videoroom::room::RoomId;
 use crate::videoroom::rooms_registry::RoomsRegistry;
 use actix_web::web::{Data, Payload, Query};
@@ -458,7 +458,7 @@ mod participant {
     }
 
     impl ParticipantId {
-        fn new() -> Self {
+        pub fn new() -> Self {
             Self(Uuid::new_v4())
         }
     }
@@ -498,7 +498,7 @@ mod participant {
 
     impl ParticipantConnection {
         /// Create a new instance representing WebSocket connection
-        pub async fn new(room: Room) -> Result<Self, String> {
+        pub async fn new(room: Room, peer_id: ParticipantId) -> Result<Self, String> {
             // We know that for videoroom example we'll need 2 transports, so we can create both
             // right away. This may not be the case for real-world applications or you may create
             // this at a different time and/or in different order.
@@ -526,7 +526,7 @@ mod participant {
                 .map_err(|error| format!("Failed to create consumer transport: {error}"))?;
 
             Ok(Self {
-                id: ParticipantId::new(),
+                id: peer_id,
                 client_rtp_capabilities: None,
                 consumers: HashMap::new(),
                 producers: vec![],
@@ -626,17 +626,19 @@ mod participant {
                     ctx.pong(&msg);
                 }
                 Ok(ws::Message::Pong(_)) => {}
-                Ok(ws::Message::Text(text)) => match serde_json::from_str::<ClientRoomMessage>(&text) {
-                    Ok(message) => {
-                        // Parse JSON into an enum and just send it back to the actor to be
-                        // processed by another handler below, it is much more convenient to just
-                        // parse it in one place and have typed data structure everywhere else
-                        ctx.address().do_send(message);
+                Ok(ws::Message::Text(text)) => {
+                    match serde_json::from_str::<ClientRoomMessage>(&text) {
+                        Ok(message) => {
+                            // Parse JSON into an enum and just send it back to the actor to be
+                            // processed by another handler below, it is much more convenient to just
+                            // parse it in one place and have typed data structure everywhere else
+                            ctx.address().do_send(message);
+                        }
+                        Err(error) => {
+                            eprintln!("Failed to parse client message: {error}\n{text}");
+                        }
                     }
-                    Err(error) => {
-                        eprintln!("Failed to parse client message: {error}\n{text}");
-                    }
-                },
+                }
                 Ok(ws::Message::Binary(bin)) => {
                     eprintln!("Unexpected binary message: {bin:?}");
                 }
@@ -892,6 +894,7 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
 #[serde(rename_all = "camelCase")]
 pub struct QueryParameters {
     room_id: Option<RoomId>,
+    peer_id: Option<ParticipantId>,
 }
 
 /// Function that receives HTTP request on WebSocket route and upgrades it to WebSocket connection.
@@ -913,6 +916,8 @@ pub async fn ws_index_rooms(
         None => rooms_registry.create_room(&worker_manager).await,
     };
 
+    let peer_id = query_parameters.peer_id.unwrap_or(ParticipantId::new());
+
     log::info!("Room created");
 
     let room = match room {
@@ -924,7 +929,7 @@ pub async fn ws_index_rooms(
         }
     };
 
-    match ParticipantConnection::new(room).await {
+    match ParticipantConnection::new(room, peer_id).await {
         Ok(echo_server) => ws::start(echo_server, &request, stream),
         Err(error) => {
             eprintln!("{error}");

@@ -1,12 +1,10 @@
 import * as VOXELIZE from '@voxelize/core'
-import { GUI } from 'lil-gui'
 import * as THREE from 'three'
 
-import { voiceChat } from '~/voice'
-import { setupWorld } from '~/world'
-import { loader } from '~/routes/_auth.world.$worldId'
 import { SerializeFrom } from '@remix-run/node'
-import { startCall, defaultMediasoupWsTransport } from '~/mediasoup'
+import { defaultMediaSoupWsTransport, setupCall } from '~/mediasoup'
+import { loader } from '~/routes/_auth.world.$worldId'
+import { setupWorld } from '~/world'
 
 export let voxelizeState: {
     sharingScreen: boolean
@@ -324,23 +322,25 @@ export async function start(data: SerializeFrom<typeof loader>) {
     preview.controls = true
     const container = document.getElementById('top-level-root')
     container.appendChild(preview)
-    const { leave } = await startCall({
+    const { leave, startCall: startAudioCall } = await setupCall({
         callType: 'audioOnly',
-        preview,
-        ...defaultMediasoupWsTransport({ roomId }),
+        peerId: userId,
+        ...defaultMediaSoupWsTransport({ roomId, peerId: userId }),
     })
-    // startCall({
-    //     callType: 'shareScreen',
-    //     preview: document.getElementById('screen') as any,
-    //     ...defaultMediasoupWsTransport({ roomId: roomId.slice(0, -1) + '1' }),
-    // })
+    const { leave: leaveScreenShare, startCall: startScreenShare } =
+        await setupCall({
+            callType: 'shareScreen',
+            peerId: userId,
+            ...defaultMediaSoupWsTransport({ roomId, peerId: userId }),
+        })
+    await startAudioCall(preview)
 
-    function onVideoShareKeyPress(e: KeyboardEvent) {
+    async function onVideoShareKeyPress(e: KeyboardEvent) {
         if (voxelizeState.sharingScreen) return
         if (e.key === 'v') {
-            const video = new ShareScreenVideo()
+            const { mesh, video } = createOrGetShareVideo({ peerId: userId })
 
-            voxelizeState.world.add(video.mesh)
+            await startScreenShare(video)
         }
     }
     window.addEventListener('keydown', onVideoShareKeyPress)
@@ -361,47 +361,61 @@ export async function start(data: SerializeFrom<typeof loader>) {
     return () => {
         mainCharacter.remove()
         leave()
+        leaveScreenShare()
         window.removeEventListener('keydown', onVideoShareKeyPress)
     }
 }
 
-class ShareScreenVideo {
-    video: HTMLVideoElement
-    mesh: THREE.Mesh
+export function createOrGetShareVideo({ peerId }) {
+    let video = document.getElementById('share-video') as HTMLVideoElement
 
-    constructor() {
-        let video = document.getElementById('video')
-        if (!video) {
-            throw new Error('Video element not found')
+    if (!video) {
+        video = document.createElement('video')
+        document.body.appendChild(video)
+        video.id = 'share-video'
+        video.style.display = 'none'
+        video.autoplay = true
+        video.muted = true
+        video.playsInline = true
+        video.onloadedmetadata = () => {
+            video.play()
         }
-        this.video = video as HTMLVideoElement
-        // this.video.play()
-
-        const texture = new THREE.VideoTexture(this.video)
-        texture.colorSpace = THREE.SRGBColorSpace
-
-        const geometry = new THREE.PlaneGeometry(16, 9)
-        texture.wrapS = THREE.RepeatWrapping
-        // texture.wrapT = THREE.RepeatWrapping
-        // geometry.scale(0.5, 0.5, 0.5)
-        const material = new THREE.MeshBasicMaterial({
-            // color: 0xffffff,
-            side: THREE.DoubleSide,
-            map: texture,
-        })
-
-        const mesh = new THREE.Mesh(geometry, material)
-        const pos = voxelizeState.mainCharacter.position
-        mesh.position.set(pos.x, pos.y + 2, pos.z)
-        mesh.lookAt(voxelizeState.controls.camera.position)
-        // the mesh should look at me like a screen, should be 90 degrees
-        mesh.rotation.y = Math.PI / 2
-        // the other axis has to be 0
-        mesh.rotation.x = 0
-        mesh.rotation.z = 0
-
-        this.mesh = mesh
-
-        //
     }
+    video.play()
+
+    // this.video.play()
+
+    const texture = new THREE.VideoTexture(video)
+    texture.colorSpace = THREE.SRGBColorSpace
+
+    const geometry = new THREE.PlaneGeometry(16, 9)
+    texture.wrapS = THREE.RepeatWrapping
+    // texture.wrapT = THREE.RepeatWrapping
+    // geometry.scale(0.5, 0.5, 0.5)
+    const material = new THREE.MeshBasicMaterial({
+        // color: 0xffffff,
+        side: THREE.DoubleSide,
+        map: texture,
+    })
+
+    const mesh = new THREE.Mesh(geometry, material)
+    let peer =
+        voxelizeState.peers.getPeerById(peerId) || voxelizeState.mainCharacter
+    // if (!peer) {
+    //     throw new Error(
+    //         `Peer that shared screen not found: ${peerId} in ${[...voxelizeState.peers.children.keys()]}`,
+    //     )
+    // }
+    const pos = peer.position
+    mesh.position.set(pos.x, pos.y + 2, pos.z)
+    mesh.lookAt(voxelizeState.controls.camera.position)
+    // the mesh should look at me like a screen, should be 90 degrees
+    mesh.rotation.y = Math.PI / 2
+    // the other axis has to be 0
+    mesh.rotation.x = 0
+    mesh.rotation.z = 0
+
+    voxelizeState.world.add(mesh)
+
+    return { mesh, video }
 }
