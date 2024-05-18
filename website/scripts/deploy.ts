@@ -9,11 +9,11 @@ import path from 'path'
 async function main() {
     const stage = getCurrentStage()
     const env = await getDopplerEnv({ stage: 'production', project: 'website' })
-    // await Promise.all([
-    //     shell(`pnpm build`, {
-    //         env,
-    //     }),
-    // ])
+    await Promise.all([
+        shell(`pnpm build`, {
+            env,
+        }),
+    ])
     await deployFly({
         appName: 'minecord-website',
         port: 3000,
