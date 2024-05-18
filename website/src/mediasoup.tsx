@@ -290,9 +290,13 @@ export async function setupCall({
         })
         // producer.close();
         // producerTransport?.close();
+        
         const tracks = mediaStream.getTracks()
         for (let track of tracks) {
             track.stop()
+        }
+        for (let part of participants.values()) {
+            part.destroy()
         }
         close()
     }

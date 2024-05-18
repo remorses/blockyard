@@ -350,6 +350,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
         if (id === hostUserId) {
             // voiceChat({ isInitializer: userId === hostUserId })
         }
+        
         setTimeout(() => {
             const peer = peers.getPeerById(id)
             if (!peer) return
@@ -362,6 +363,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
         mainCharacter.remove()
         leave()
         leaveScreenShare()
+        preview?.remove()
         window.removeEventListener('keydown', onVideoShareKeyPress)
     }
 }
