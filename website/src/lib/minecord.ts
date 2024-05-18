@@ -14,6 +14,7 @@ export let voxelizeState: {
     peers: VOXELIZE.Peers
     events: VOXELIZE.Events
     mainCharacter: VOXELIZE.Character
+    shareScreenMesh?: THREE.Mesh
 } = {} as any
 export async function start(data: SerializeFrom<typeof loader>) {
     const canvas = document.getElementById('canvas')
@@ -371,7 +372,10 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
 export function createOrGetShareVideo({ peerId }) {
     let video = document.getElementById('share-video') as HTMLVideoElement
-
+    if (voxelizeState.shareScreenMesh) {
+        voxelizeState.world.remove(voxelizeState.shareScreenMesh)
+        voxelizeState.shareScreenMesh = undefined
+    }
     if (!video) {
         video = document.createElement('video')
         document.body.appendChild(video)
@@ -419,6 +423,7 @@ export function createOrGetShareVideo({ peerId }) {
     mesh.rotation.z = 0
 
     voxelizeState.world.add(mesh)
+    voxelizeState.shareScreenMesh = mesh
 
     return { mesh, video }
 }

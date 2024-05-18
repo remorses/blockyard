@@ -24,6 +24,7 @@ async function main() {
         maxInstances: 1,
         healthCheckPath: '/api/health',
         memorySize: '512mb',
+        
         env: {
             ...env,
             NODE_ENV: 'production',
