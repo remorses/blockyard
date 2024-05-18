@@ -6,6 +6,8 @@ WORKDIR /app/server
 COPY ./server /app/server
 COPY ../voxelize /app/voxelize
 
+RUN rustup component add rustfmt
+
 RUN cargo build --release && ls target
 
 FROM --platform=linux/amd64 ubuntu:20.04

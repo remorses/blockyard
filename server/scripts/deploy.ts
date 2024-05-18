@@ -9,6 +9,7 @@ async function main() {
         dockerfile: 'server/Dockerfile',
         minInstances: 1,
         maxInstances: 1,
+        buildRemotely: true,
         memorySize: '1gb',
         regions: ['iad'],
     })
