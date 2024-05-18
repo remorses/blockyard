@@ -1,11 +1,12 @@
 **/node_modules
-**/worlds
-**/world
+server/worlds
+server/world
 **/target
-**/scripts
+
 
 
 voxelize/**
 !voxelize/server
 !voxelize/Cargo*
 !voxelize/build.rs
+!voxelize/*.proto
