@@ -13,7 +13,7 @@ import { ConsumerOptions } from 'mediasoup-client/lib/Consumer'
 import { Producer } from 'mediasoup-client/lib/types'
 import { env } from '~/lib/env'
 import { withResolvers } from '~/lib/utils'
-import { createOrGetShareVideo } from '~/lib/minecord'
+import { createOrGetShareVideo, voxelizeState } from '~/lib/minecord'
 
 type Brand<K, T> = K & { __brand: T }
 
@@ -152,6 +152,9 @@ class Participant {
             } else {
                 this.preview.classList.add('border')
             }
+            this.preview.addEventListener('play', () => {
+                console.log(`participant ${this.peerId} audio playing`)
+            })
         } else {
             const { mesh, video } = createOrGetShareVideo({
                 peerId: this.peerId,
@@ -162,21 +165,30 @@ class Participant {
         if (!this.preview) {
             throw new Error('Preview element is required')
         }
-
-        this.preview.muted = false
-        this.preview.controls = true
-
         this.preview.onloadedmetadata = () => {
             this.preview.play()
         }
+
+        this.preview.muted = false
+        this.preview.autoplay = true
+        this.preview.controls = true
 
         container.append(this.preview)
     }
 
     public addTrack(track: MediaStreamTrack): void {
         this.mediaStream.addTrack(track)
-
         this.preview.srcObject = this.mediaStream
+        const play = () => {
+            this.preview.play().catch((e) => {
+                console.error('play() error for participant audio', e)
+            })
+        }
+        if (voxelizeState?.controls?.isLocked) {
+            play()
+        } else {
+            voxelizeState.controls.on('lock', play)
+        }
     }
 
     public deleteTrack(track: MediaStreamTrack): void {
@@ -189,10 +201,16 @@ class Participant {
     }
 
     public hasTracks(): boolean {
-        return this.mediaStream.getTracks().length > 0
+        if (!this.mediaStream) {
+            return false
+        }
+        return this.mediaStream?.getTracks().length > 0
     }
 
     public destroy(): void {
+        if (!this.mediaStream) {
+            return
+        }
         for (let track of this.mediaStream.getTracks()) {
             this.deleteTrack(track)
         }
@@ -290,8 +308,8 @@ export async function setupCall({
         })
         // producer.close();
         // producerTransport?.close();
-        
-        const tracks = mediaStream.getTracks()
+
+        const tracks = mediaStream?.getTracks() || []
         for (let track of tracks) {
             track.stop()
         }
@@ -309,6 +327,7 @@ export async function setupCall({
         if (!sendPreview) {
             throw new Error('Preview element is required')
         }
+        console.log(`starting call ${callType}`)
 
         mediaStream =
             callType === 'audioOnly'
@@ -324,10 +343,21 @@ export async function setupCall({
         // const sendPreview = getPreviewElement()
         sendPreview.srcObject = mediaStream
         sendPreview.onloadedmetadata = () => {
-            sendPreview.play()
+            sendPreview.play().catch((e) => {
+                console.error(
+                    'play() error inside onloadedmetadata for participant audio',
+                    e,
+                )
+            })
         }
-        sendPreview.play()
+        sendPreview.play().catch((e) => {
+            console.error('play() error for participant audio', e)
+        })
+        // sendPreview.play()
         // And create producers for all tracks that were previously requested
+        if (!mediaStream.getTracks()?.length) {
+            throw new Error('No tracks found in media stream')
+        }
         for (const track of mediaStream.getTracks()) {
             producer = await producerTransport!.produce({ track })
 

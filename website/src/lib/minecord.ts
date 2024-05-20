@@ -5,6 +5,7 @@ import { SerializeFrom } from '@remix-run/node'
 import { defaultMediaSoupWsTransport, setupCall } from '~/mediasoup'
 import { loader } from '~/routes/_auth.world.$worldId'
 import { setupWorld } from '~/world'
+import { cuidToUUID } from '~/lib/utils'
 
 export let voxelizeState: {
     sharingScreen: boolean
@@ -151,8 +152,8 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     controls.connect(inputs)
 
-    inputs.bind('g', controls.toggleGhostMode)
-    inputs.bind('f', controls.toggleFly)
+    // inputs.bind('g', controls.toggleGhostMode)
+    // inputs.bind('f', controls.toggleFly)
 
     // To add/remove blocks
     const voxelInteract = new VOXELIZE.VoxelInteract(camera, world, {
@@ -318,10 +319,15 @@ export async function start(data: SerializeFrom<typeof loader>) {
         events,
         mainCharacter,
     }
-    let roomId = '123e4567-e89b-12d3-a456-426614174000'
+    let roomId = cuidToUUID(worldId)
     const preview = document.createElement('audio')
+    preview.addEventListener('play', () => {
+        console.log('preview audio playing')
+    })
     preview.muted = true
+    preview.autoplay = true
     preview.controls = true
+
     const container = document.getElementById('top-level-root')
     container.appendChild(preview)
     const { leave, startCall: startAudioCall } = await setupCall({
@@ -335,6 +341,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
             peerId: userId,
             ...defaultMediaSoupWsTransport({ roomId, peerId: userId }),
         })
+    controls.on('lock', async () => {})
     await startAudioCall(preview)
 
     async function onVideoShareKeyPress(e: KeyboardEvent) {
@@ -385,10 +392,20 @@ export function createOrGetShareVideo({ peerId }) {
         video.muted = true
         video.playsInline = true
         video.onloadedmetadata = () => {
-            video.play()
+            video.play().catch((e) => {
+                console.error(
+                    `share video.play() failed inside onloadedmetadata`,
+                    e,
+                )
+            })
         }
+        video.addEventListener('play', () => {
+            console.log('share video playing')
+        })
+        video.play().catch((e) => {
+            console.error(`share video.play() failed`, e)
+        })
     }
-    video.play()
 
     // this.video.play()
 
