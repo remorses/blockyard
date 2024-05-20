@@ -33,7 +33,7 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
             request,
         })
 
-    const name = session?.user?.app_metadata?.name || 'Guest'
+    const name = session?.user?.user_metadata?.name || 'Guest'
 
     if (!session) {
         const u = new URL('/login', request.url)

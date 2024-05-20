@@ -1,4 +1,6 @@
 import * as VOXELIZE from '@voxelize/core'
+import { atom } from 'nanostores'
+
 import {
     Participant,
     RemoteTrackPublication,
@@ -17,8 +19,11 @@ import { cuidToUUID } from '~/lib/utils'
 import { div } from 'three/examples/jsm/nodes/Nodes.js'
 import { $ } from 'vitest/dist/reporters-yx5ZTtEV.js'
 
+export const participantsStore = atom<Participant[]>([])
+
 export let voxelizeState: {
     sharingScreen: boolean
+    // room?: Room
     world: VOXELIZE.World
     network: VOXELIZE.Network
     controls: VOXELIZE.RigidControls
@@ -339,6 +344,15 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
         room = new Room({})
 
+        function getParticipants() {
+            const users = [
+                ...room?.remoteParticipants.values(),
+                room?.localParticipant,
+            ]
+            participantsStore.set(users)
+        }
+        getParticipants()
+        // voxelizeState.room = room
         // set up event listeners
         room.on(
             RoomEvent.TrackSubscribed,
@@ -368,6 +382,14 @@ export async function start(data: SerializeFrom<typeof loader>) {
             .on(RoomEvent.Disconnected, () => {
                 console.log('disconnected from room')
             })
+            .on(RoomEvent.ParticipantConnected, (participant) => {
+                console.log('participant connected', participant)
+                getParticipants()
+            })
+            .on(RoomEvent.ParticipantDisconnected, (participant) => {
+                console.log('participant disconnected', participant)
+                getParticipants()
+            })
             .on(RoomEvent.LocalTrackUnpublished, (publication, participant) => {
                 // when local tracks are ended, update UI to remove them from rendering
                 publication.track.detach()
@@ -377,7 +399,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
         // publish local camera and mic tracks
         // await room.localParticipant.enableCameraAndMicrophone()
-        // await room.localParticipant.setCameraEnabled(false)
+        await room.localParticipant.setCameraEnabled(false)
         await room.localParticipant.setMicrophoneEnabled(true)
     }
 
