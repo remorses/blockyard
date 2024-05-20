@@ -33,6 +33,8 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
             request,
         })
 
+    const name = session?.user?.app_metadata?.name || 'Guest'
+
     if (!session) {
         const u = new URL('/login', request.url)
         u.searchParams.set('next', request.url)
@@ -62,6 +64,8 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
             env.LIVEKIT_API_SECRET,
             {
                 identity: userId,
+                name,
+                // metadata: {}
             },
         )
         at.addGrant({

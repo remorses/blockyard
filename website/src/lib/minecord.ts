@@ -338,8 +338,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
         const wsURL = 'wss://blockyard-dlqqsec6.livekit.cloud'
 
         room = new Room({})
-        room.localParticipant.setCameraEnabled(false)
-        room.localParticipant.setMicrophoneEnabled(true)
+
         // set up event listeners
         room.on(
             RoomEvent.TrackSubscribed,
@@ -377,12 +376,18 @@ export async function start(data: SerializeFrom<typeof loader>) {
         console.log('connected to livekit room', room.name)
 
         // publish local camera and mic tracks
-        await room.localParticipant.enableCameraAndMicrophone()
+        // await room.localParticipant.enableCameraAndMicrophone()
+        // await room.localParticipant.setCameraEnabled(false)
+        await room.localParticipant.setMicrophoneEnabled(true)
     }
 
     controls.on('lock', async () => {
+        if (room) return
         startAudio()
     })
+    if (controls.isLocked) {
+        startAudio()
+    }
 
     async function onVideoShareKeyPress(e: KeyboardEvent) {
         if (voxelizeState.sharingScreen) return
@@ -411,7 +416,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     return () => {
         mainCharacter.remove()
-
+        room?.disconnect()
         window.removeEventListener('keydown', onVideoShareKeyPress)
     }
 }
@@ -448,7 +453,7 @@ function renderScreenShare(room: Room) {
 
     if (screenSharePub && participant) {
         const { mesh, video } = createOrGetShareVideo({
-            peerId: participant.sid,
+            peerId: participant.identity,
         })
         screenSharePub.videoTrack?.attach(video)
         if (screenShareAudioPub) {
@@ -502,7 +507,7 @@ export function createOrGetShareVideo({ peerId }) {
     texture.colorSpace = THREE.SRGBColorSpace
 
     const geometry = new THREE.PlaneGeometry(16, 9)
-    texture.wrapS = THREE.RepeatWrapping
+    // texture.wrapS = THREE.RepeatWrapping
     // texture.wrapT = THREE.RepeatWrapping
     // geometry.scale(0.5, 0.5, 0.5)
     const material = new THREE.MeshBasicMaterial({
@@ -511,7 +516,7 @@ export function createOrGetShareVideo({ peerId }) {
         map: texture,
     })
 
-    const mesh = new THREE.Mesh(geometry, material)
+    const planeMesh = new THREE.Mesh(geometry, material)
     let peer =
         voxelizeState.peers.getPeerById(peerId) || voxelizeState.mainCharacter
     // if (!peer) {
@@ -520,16 +525,20 @@ export function createOrGetShareVideo({ peerId }) {
     //     )
     // }
     const pos = peer.position
-    mesh.position.set(pos.x, pos.y + 2, pos.z)
-    mesh.lookAt(voxelizeState.controls.camera.position)
-    // the mesh should look at me like a screen, should be 90 degrees
-    mesh.rotation.y = Math.PI / 2
-    // the other axis has to be 0
-    mesh.rotation.x = 0
-    mesh.rotation.z = 0
+    // Assuming you have an animation loop or a function that updates on character movement
 
-    voxelizeState.world.add(mesh)
-    voxelizeState.shareScreenMesh = mesh
+    const forward = new THREE.Vector3(0, 0, -1)
+    forward.applyQuaternion(peer.quaternion)
+    forward.normalize() // Ensure the forward vector is of unit length
+    const planePosition = forward.clone().multiplyScalar(10).add(peer.position)
+    planeMesh.position.copy(planePosition)
 
-    return { mesh, video }
+    // elevate it a bit
+    planeMesh.lookAt(peer.position)
+    planeMesh.position.y += 5
+
+    voxelizeState.world.add(planeMesh)
+    voxelizeState.shareScreenMesh = planeMesh
+
+    return { mesh: planeMesh, video }
 }
