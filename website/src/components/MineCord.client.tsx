@@ -3,6 +3,7 @@ import { Link, useLoaderData } from '@remix-run/react'
 import { XIcon } from 'lucide-react'
 import { useEffect } from 'react'
 import { WindowHeader, WindowContent, Window, Button, TextInput } from 'react95'
+import { ConstantColorFactor } from 'three'
 import { voxelizeState } from '~/lib/minecord'
 import { getWorldUrl } from '~/lib/utils'
 import { loader } from '~/routes/_auth.world.$worldId'
@@ -21,6 +22,7 @@ export function MineCord() {
             }
         })
         return () => {
+            console.log(`UNMOUNTING MINECORD`)
             started = false
             destroy()
         }

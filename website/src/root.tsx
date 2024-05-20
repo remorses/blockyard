@@ -43,6 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 />
                 <Meta />
                 <Links />
+                {/* {typeof document === 'undefined' ? '__STYLES__' : null} */}
             </head>
             <body>
                 <NextUIProvider className='h-full'>{children}</NextUIProvider>

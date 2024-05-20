@@ -7,11 +7,17 @@
 import { RemixBrowser } from '@remix-run/react'
 import { startTransition, StrictMode } from 'react'
 import { hydrateRoot } from 'react-dom/client'
+import { StyleSheetManager } from 'styled-components'
+import isPropValid from '@emotion/is-prop-valid'
 
 startTransition(() => {
     hydrateRoot(
         document,
-
-        <RemixBrowser />,
+        <StyleSheetManager
+            shouldForwardProp={(prop) => isPropValid(prop)}
+            enableVendorPrefixes
+        >
+            <RemixBrowser />
+        </StyleSheetManager>,
     )
 })
