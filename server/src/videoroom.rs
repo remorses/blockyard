@@ -643,8 +643,11 @@ mod participant {
                     eprintln!("Unexpected binary message: {bin:?}");
                 }
                 Ok(ws::Message::Close(reason)) => {
-                    ctx.close(reason);
-                    ctx.stop();
+                    // don't close if already closed
+                    if !ctx.state().stopping() {
+                        ctx.close(reason);
+                        ctx.stop();
+                    }
                 }
                 _ => ctx.stop(),
             }
