@@ -1,12 +1,9 @@
-use crate::videoroom::{rooms_registry::RoomsRegistry, ws_index_rooms};
-use mediasoup::worker_manager::WorkerManager;
-
 use serde::{Deserialize, Serialize};
-use videoroom::rooms_registry;
+
 use voxelize::{
     Block, Event, FlatlandStage, Info, Registry, Server, Voxelize, World, WorldConfig, WsSession,
 };
-mod videoroom;
+
 mod worlds;
 
 use worlds::terrain::setup_terrain_world;
@@ -193,14 +190,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(web::Data::new(secret))
             .app_data(web::Data::new(server_addr.clone()))
-            .app_data(web::Data::new(WorkerManager::new()))
-            .app_data(web::Data::new(RoomsRegistry::default()))
             .app_data(web::Data::new(Config {
                 serve: serve.to_owned(),
             }))
             .route("/", web::get().to(index))
             .route("/ws/", web::get().to(ws_route))
-            .route("/ws-room", web::get().to(ws_index_rooms))
             .route("/api/upsert-world", web::post().to(new_world_api))
             .route("/info", web::get().to(info));
 
@@ -210,7 +204,7 @@ async fn main() -> std::io::Result<()> {
             app.service(Files::new("/", serve).show_files_listing())
         }
     })
-    .workers(2)
+    // .workers(2)
     .bind((addr.to_owned(), port.to_owned()))?;
 
     info!("🍄  Voxelize backend running on http://{}:{}", addr, port);

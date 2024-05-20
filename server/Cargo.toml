@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-mediasoup="0.17.0"
+# mediasoup="0.17.0"
 voxelize = { path = "../voxelize" }
 actix = "0.13.3"
 actix-web = "4.5.1"
@@ -20,12 +20,12 @@ log = "0.4.21"
 actix-cors = "0.7.0"
 actix-files = "0.6.5"
 actix-web-actors = "4.3.0"
-event-listener-primitives = "2.0.1"
-async-lock = "2.6.0"
-futures-lite = "1.12.0"
-[dependencies.parking_lot]
-version = "0.12.1"
-features = ["serde"]
+# event-listener-primitives = "2.0.1"
+# async-lock = "2.6.0"
+# futures-lite = "1.12.0"
+# [dependencies.parking_lot]
+# version = "0.12.1"
+# features = ["serde"]
 [dependencies.uuid]
 features = ["serde", "v4"]
 version = "1.2.1"

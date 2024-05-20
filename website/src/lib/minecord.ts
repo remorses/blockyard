@@ -1,11 +1,21 @@
 import * as VOXELIZE from '@voxelize/core'
+import {
+    Participant,
+    RemoteTrackPublication,
+    Room,
+    RoomEvent,
+    Track,
+    TrackPublication,
+} from 'livekit-client'
 import * as THREE from 'three'
 
 import { SerializeFrom } from '@remix-run/node'
-import { defaultMediaSoupWsTransport, setupCall } from '~/mediasoup'
+
 import { loader } from '~/routes/_auth.world.$worldId'
 import { setupWorld } from '~/world'
 import { cuidToUUID } from '~/lib/utils'
+import { div } from 'three/examples/jsm/nodes/Nodes.js'
+import { $ } from 'vitest/dist/reporters-yx5ZTtEV.js'
 
 export let voxelizeState: {
     sharingScreen: boolean
@@ -320,36 +330,67 @@ export async function start(data: SerializeFrom<typeof loader>) {
         mainCharacter,
     }
     let roomId = cuidToUUID(worldId)
-    const preview = document.createElement('audio')
-    preview.addEventListener('play', () => {
-        console.log('preview audio playing')
-    })
-    preview.muted = true
-    preview.autoplay = true
-    preview.controls = true
 
     const container = document.getElementById('top-level-root')
-    container.appendChild(preview)
-    const { leave, startCall: startAudioCall } = await setupCall({
-        callType: 'audioOnly',
-        peerId: userId,
-        ...defaultMediaSoupWsTransport({ roomId, peerId: userId }),
+
+    let room: Room | undefined
+    async function startAudio() {
+        const wsURL = 'wss://blockyard-dlqqsec6.livekit.cloud'
+
+        room = new Room({})
+        room.localParticipant.setCameraEnabled(false)
+        room.localParticipant.setMicrophoneEnabled(true)
+        // set up event listeners
+        room.on(
+            RoomEvent.TrackSubscribed,
+            (track, publication, participant) => {
+                console.log('track subscribed', track)
+                if (track.kind === Track.Kind.Audio) {
+                    // attach it to a new HTMLVideoElement or HTMLAudioElement
+                    const element = track.attach()
+                    container.appendChild(element)
+                }
+                renderScreenShare(room)
+            },
+        )
+            .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
+                renderScreenShare(room)
+            })
+            .on(
+                RoomEvent.TrackUnsubscribed,
+                (track, publication, participant) => {
+                    // remove tracks from all attached elements
+                    track.detach()
+                },
+            )
+            .on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+                // show UI indicators when participant is speaking
+            })
+            .on(RoomEvent.Disconnected, () => {
+                console.log('disconnected from room')
+            })
+            .on(RoomEvent.LocalTrackUnpublished, (publication, participant) => {
+                // when local tracks are ended, update UI to remove them from rendering
+                publication.track.detach()
+            })
+        await room.connect(wsURL, data.livekitToken, {})
+        console.log('connected to livekit room', room.name)
+
+        // publish local camera and mic tracks
+        await room.localParticipant.enableCameraAndMicrophone()
+    }
+
+    controls.on('lock', async () => {
+        startAudio()
     })
-    const { leave: leaveScreenShare, startCall: startScreenShare } =
-        await setupCall({
-            callType: 'shareScreen',
-            peerId: userId,
-            ...defaultMediaSoupWsTransport({ roomId, peerId: userId }),
-        })
-    controls.on('lock', async () => {})
-    await startAudioCall(preview)
 
     async function onVideoShareKeyPress(e: KeyboardEvent) {
         if (voxelizeState.sharingScreen) return
         if (e.key === 'v') {
-            const { mesh, video } = createOrGetShareVideo({ peerId: userId })
-
-            await startScreenShare(video)
+            const res = await room.localParticipant.setScreenShareEnabled(
+                true,
+                {},
+            )
         }
     }
     window.addEventListener('keydown', onVideoShareKeyPress)
@@ -370,41 +411,89 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     return () => {
         mainCharacter.remove()
-        leave()
-        leaveScreenShare()
-        preview?.remove()
+
         window.removeEventListener('keydown', onVideoShareKeyPress)
     }
 }
+// https://github.com/livekit/client-sdk-js/blob/1e8465ab3202be0542580648c6443846a39ccfe4/example/sample.ts#L687
+function renderScreenShare(room: Room) {
+    // if (room.state !== ConnectionState.Connected) {
+    //     div.style.display = 'none'
+    //     return
+    // }
+    let participant: Participant | undefined
+    let screenSharePub: TrackPublication | undefined =
+        room.localParticipant.getTrackPublication(Track.Source.ScreenShare)
+    let screenShareAudioPub: RemoteTrackPublication | undefined
+    if (!screenSharePub) {
+        room.remoteParticipants.forEach((p) => {
+            if (screenSharePub) {
+                return
+            }
+            participant = p
+            const pub = p.getTrackPublication(Track.Source.ScreenShare)
+            if (pub?.isSubscribed) {
+                screenSharePub = pub
+            }
+            const audioPub = p.getTrackPublication(
+                Track.Source.ScreenShareAudio,
+            )
+            if (audioPub?.isSubscribed) {
+                screenShareAudioPub = audioPub
+            }
+        })
+    } else {
+        participant = room.localParticipant
+    }
+
+    if (screenSharePub && participant) {
+        const { mesh, video } = createOrGetShareVideo({
+            peerId: participant.sid,
+        })
+        screenSharePub.videoTrack?.attach(video)
+        if (screenShareAudioPub) {
+            screenShareAudioPub.audioTrack?.attach(video)
+        }
+    } else {
+        // console.log('no screen share track, removing video elem')
+        // removeScreenShare()
+    }
+}
+
+function removeScreenShare() {
+    voxelizeState.world.remove(voxelizeState.shareScreenMesh)
+}
 
 export function createOrGetShareVideo({ peerId }) {
-    let video = document.getElementById('share-video') as HTMLVideoElement
+    const videoId = 'share-video'
+    let video = document.getElementById(videoId) as HTMLVideoElement
+    if (!video) {
+        // throw new Error('Video for screen share not found')
+        video = document.createElement('video')
+        document.body.appendChild(video)
+        video.id = videoId
+        video.style.display = 'none'
+        video.autoplay = true
+        video.muted = false
+        video.playsInline = true
+        // video.onloadedmetadata = () => {
+        //     video.play().catch((e) => {
+        //         console.error(
+        //             `share video.play() failed inside onloadedmetadata`,
+        //             e,
+        //         )
+        //     })
+        // }
+        // video.addEventListener('play', () => {
+        //     console.log('share video playing')
+        // })
+        // video.play().catch((e) => {
+        //     console.error(`share video.play() failed`, e)
+        // })
+    }
     if (voxelizeState.shareScreenMesh) {
         voxelizeState.world.remove(voxelizeState.shareScreenMesh)
         voxelizeState.shareScreenMesh = undefined
-    }
-    if (!video) {
-        video = document.createElement('video')
-        document.body.appendChild(video)
-        video.id = 'share-video'
-        video.style.display = 'none'
-        video.autoplay = true
-        video.muted = true
-        video.playsInline = true
-        video.onloadedmetadata = () => {
-            video.play().catch((e) => {
-                console.error(
-                    `share video.play() failed inside onloadedmetadata`,
-                    e,
-                )
-            })
-        }
-        video.addEventListener('play', () => {
-            console.log('share video playing')
-        })
-        video.play().catch((e) => {
-            console.error(`share video.play() failed`, e)
-        })
     }
 
     // this.video.play()

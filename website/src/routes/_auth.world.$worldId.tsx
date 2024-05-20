@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react'
+import { AccessToken } from 'livekit-server-sdk'
+
 import {
     LoaderFunctionArgs,
     json,
@@ -10,6 +12,7 @@ import { MineCord } from '~/components/MineCord.client'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
 import { prisma } from 'db/prisma'
 import { serverApi } from '~/lib/rest'
+import { env } from '~/lib/env'
 
 export const meta: MetaFunction = () => {
     return [
@@ -52,12 +55,37 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
         console.log('World not found')
         return redirect('/world', { headers })
     }
-    await serverApi.upsertWorld({ worldId })
+
+    async function getToken() {
+        const at = new AccessToken(
+            env.LIVEKIT_API_KEY,
+            env.LIVEKIT_API_SECRET,
+            {
+                identity: userId,
+            },
+        )
+        at.addGrant({
+            roomJoin: true,
+            room: worldId,
+            canPublish: true,
+            canSubscribe: true,
+            // canPublishSources: true,
+        })
+
+        const token = await at.toJwt()
+        return token
+    }
+
+    const [livekitToken] = await Promise.all([
+        getToken(),
+        serverApi.upsertWorld({ worldId }),
+    ])
 
     return json(
         {
             world,
             userId,
+            livekitToken,
             // world,
             //
         },
