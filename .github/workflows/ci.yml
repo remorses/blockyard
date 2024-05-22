@@ -13,6 +13,7 @@
 #                   # fetch-depth: 0
 #                   submodules: true
 #             - uses: actions/setup-node@v3
+#             - uses: dopplerhq/cli-action@v2
 #               with:
 #                   node-version: 20
 #                   registry-url: https://registry.npmjs.org/
