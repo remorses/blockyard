@@ -323,7 +323,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     await applyBlockTextures()
 
-    world.time = 0.5 * 24_000
+    world.time = 0.4 * 24_000
     world.renderRadius = 8
     voxelizeState = {
         sharingScreen: false,
