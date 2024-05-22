@@ -109,7 +109,7 @@ function InviteUsersModal({ onClose }) {
             </WindowHeader>
             <WindowContent className='flex flex-col gap-4'>
                 <div className='flex flex-col gap-4'>
-                    You can incite your friends sending the link below
+                    You can invite your friends sending the link below
                 </div>
                 <div className='grow'></div>
                 <TextInput variant='flat' value={link} fullWidth readOnly />
