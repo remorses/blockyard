@@ -201,7 +201,8 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     // Add a character to the control
     function createCharacter() {
-        const character = new VOXELIZE.Character()
+        const character = new VOXELIZE.Character({})
+        character.username = data.username
         world.add(character)
         lightShined.add(character)
         shadows.add(character)

@@ -63,5 +63,5 @@ export async function getSupabaseWithSessionHeaders({
         redirectTo = redirect('/login', { headers })
     }
 
-    return { session, headers, supabase, userId, redirectTo }
+    return { session, headers, supabase, userId, user, redirectTo }
 }

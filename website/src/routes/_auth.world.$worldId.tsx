@@ -28,12 +28,12 @@ const sub = () => {
 export let loader = async ({ request, params }: LoaderFunctionArgs) => {
     const { worldId: worldId } = params
     console.log('Incoming params ', params)
-    const { supabase, userId, headers, session } =
+    const { supabase, userId, user, headers, session } =
         await getSupabaseWithSessionHeaders({
             request,
         })
 
-    const name = session?.user?.user_metadata?.name || 'Guest'
+    const username = session?.user?.user_metadata?.name || 'Guest'
 
     if (!session) {
         const u = new URL('/login', request.url)
@@ -64,7 +64,7 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
             env.LIVEKIT_API_SECRET,
             {
                 identity: userId,
-                name,
+                name: username,
                 // metadata: {}
             },
         )
@@ -90,6 +90,7 @@ export let loader = async ({ request, params }: LoaderFunctionArgs) => {
             world,
             userId,
             livekitToken,
+            username
             // world,
             //
         },
