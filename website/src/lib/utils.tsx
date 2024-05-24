@@ -33,3 +33,15 @@ export function cuidToUUID(str) {
     }
     return `${hash.substring(0, 8)}-${hash.substring(8, 12)}-4${hash.substring(13, 16)}-a${hash.substring(17, 20)}-${hash.substring(20, 32)}`
 }
+
+export function throttle(fn, delay) {
+    let last = 0
+    return function (...args) {
+        const now = new Date().getTime()
+        if (now - last < delay) {
+            return
+        }
+        last = now
+        return fn(...args)
+    }
+}

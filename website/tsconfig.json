@@ -23,7 +23,8 @@
         "forceConsistentCasingInFileNames": true,
         "baseUrl": ".",
         "paths": {
-            "~/*": ["src/*"]
+            "~/*": ["src/*"],
+            "website/*": ["./*"],
         },
         "strictPropertyInitialization": false,
 

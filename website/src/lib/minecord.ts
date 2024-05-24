@@ -1,4 +1,7 @@
 import * as VOXELIZE from '@voxelize/core'
+import modelUrl from 'website/src/assets/boxman.glb'
+import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+
 import { atom } from 'nanostores'
 
 import {
@@ -16,8 +19,9 @@ import { SerializeFrom } from '@remix-run/node'
 import { loader } from '~/routes/_auth.world.$worldId'
 import { setupWorld } from '~/world'
 import { cuidToUUID } from '~/lib/utils'
-import { div } from 'three/examples/jsm/nodes/Nodes.js'
+import { div, lights } from 'three/examples/jsm/nodes/Nodes.js'
 import { $ } from 'vitest/dist/reporters-yx5ZTtEV.js'
+import { env } from '~/lib/env'
 
 export const participantsStore = atom<Participant[]>([])
 
@@ -32,6 +36,7 @@ export let voxelizeState: {
     mainCharacter: VOXELIZE.Character
     shareScreenMesh?: THREE.Mesh
 } = {} as any
+
 export async function start(data: SerializeFrom<typeof loader>) {
     const canvas = document.getElementById('canvas')
     if (!canvas) {
@@ -69,8 +74,8 @@ export async function start(data: SerializeFrom<typeof loader>) {
     const camera = new THREE.PerspectiveCamera(
         75,
         window.innerWidth / window.innerHeight,
-        0.1,
-        3000,
+        0.0001,
+        30000,
     )
 
     const renderer = new THREE.WebGLRenderer({
@@ -202,6 +207,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
     // Add a character to the control
     function createCharacter() {
         const character = new VOXELIZE.Character({})
+
         character.username = data.username
         world.add(character)
         lightShined.add(character)
@@ -216,8 +222,10 @@ export async function start(data: SerializeFrom<typeof loader>) {
         while (i < 10) {
             await sleep(600)
             let status = world.getChunkStatus(0, 0)
+
             if (status === 'loaded') {
                 controls.teleportToTop(0, 0)
+
                 return
             } else {
                 console.log('waiting for chunk to load, then teleport')
@@ -278,6 +286,13 @@ export async function start(data: SerializeFrom<typeof loader>) {
 
     network.register(events)
 
+    // const debugPos = throttle(() => {
+    //     let res = new THREE.Vector3()
+    //     mainCharacter.bodyGroup.getWorldPosition(res)
+    //     console.log('Main Character Position:', mainCharacter.position)
+    //     console.log('Main Character Body Group Position:', res)
+    //     console.log('GLTF Scene Position:', gltf.scene.position)
+    // }, 1000 * 5)
     /* -------------------------------------------------------------------------- */
     /*                               MAIN GAME LOOPS                              */
     /* -------------------------------------------------------------------------- */
@@ -404,16 +419,18 @@ export async function start(data: SerializeFrom<typeof loader>) {
         await room.localParticipant.setMicrophoneEnabled(true)
     }
 
-    controls.on('lock', async () => {
-        if (room) return
-        startAudio()
-    })
-    if (controls.isLocked) {
-        startAudio()
+    if (!env.PUBLIC_DISABLE_CALL) {
+        controls.on('lock', async () => {
+            if (room) return
+            startAudio()
+        })
+        if (controls.isLocked) {
+            startAudio()
+        }
     }
 
     async function onVideoShareKeyPress(e: KeyboardEvent) {
-        if (voxelizeState.sharingScreen) return
+        // if (voxelizeState.sharingScreen) return
         if (e.key === 'v') {
             const res = await room.localParticipant.setScreenShareEnabled(
                 true,
@@ -422,7 +439,28 @@ export async function start(data: SerializeFrom<typeof loader>) {
         }
     }
     window.addEventListener('keydown', onVideoShareKeyPress)
+    inputs.bind('n', async (e) => {
+        const loader = new GLTFLoader()
 
+        const gltf: GLTF = await new Promise((resolve, reject) => {
+            loader.load(modelUrl, (x) => resolve(x), undefined, reject)
+        })
+
+        if (!gltf) {
+            throw new Error('GLTF model not loaded')
+        }
+        console.log('stopping screen share')
+        world.add(gltf.scene)
+
+        const maxHeight = world.getMaxHeightAt(10, 0)
+        lightShined.add(gltf.scene)
+        // add a light
+        const light = new THREE.PointLight(0xffffff, 1, 100)
+        light.position.set(0, maxHeight + 6, 0)
+        world.add(light)
+        console.log({ maxHeight })
+        gltf.scene.position.set(0, maxHeight, 0)
+    })
     peers.onPeerJoin = (id) => {
         if (id === userId) return
         if (id === hostUserId) {
@@ -565,3 +603,4 @@ export function createOrGetShareVideo({ peerId }) {
 
     return { mesh: planeMesh, video }
 }
+

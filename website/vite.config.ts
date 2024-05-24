@@ -38,6 +38,7 @@ export default defineConfig(({ mode, command, isSsrBuild }) => {
         legacy: {
             proxySsrExternalModules: true,
         },
+        assetsInclude: ['**/*.glb', '**/*.gltf', '**/*.hdr', '**/*.fbx'],
         plugins: [glslify(), remix({ appDirectory: 'src' }), tsconfigPaths({})],
         test: {
             alias: [
