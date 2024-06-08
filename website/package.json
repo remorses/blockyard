@@ -47,6 +47,7 @@
         "peerjs": "^1.5.3",
         "postprocessing": "^6.33.3",
         "prettier": "^3.2.5",
+        "prisma": "^5.13.0",
         "react": "19.0.0-rc-915b914b3a-20240515",
         "react-dom": "19.0.0-rc-915b914b3a-20240515",
         "react-hook-form": "^7.51.4",
