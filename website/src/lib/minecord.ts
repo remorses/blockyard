@@ -207,17 +207,19 @@ export async function start(data: SerializeFrom<typeof loader>) {
     })
 
     // Add a character to the control
-    function createCharacter() {
+    function createCharacter(userId) {
         const character = new VOXELIZE.Character({})
 
-        character.username = data.username
+        if (userId === data.userId) {
+            character.username = data.username
+        }
         world.add(character)
         lightShined.add(character)
         shadows.add(character)
         return character
     }
 
-    const mainCharacter = createCharacter()
+    const mainCharacter = createCharacter(data.userId)
     controls.attachCharacter(mainCharacter)
     world.addChunkInitListener([0, 0], async (chunk) => {
         let i = 0
@@ -390,6 +392,16 @@ export async function start(data: SerializeFrom<typeof loader>) {
                 ...room?.remoteParticipants.values(),
                 room?.localParticipant,
             ]
+            for (let peer of peers.children.values()) {
+                if (!peer?.['username']) {
+                    const user = users.find((x) => x.identity === peer.name)
+                    if (!user) {
+                        peer['username'] = 'Guest'
+                        continue
+                    }
+                    peer['username'] = user.name
+                }
+            }
             participantsStore.set(users)
         }
         getParticipants()
@@ -408,6 +420,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
             },
         )
             .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
+                getParticipants()
                 renderScreenShare(room)
             })
             .on(
@@ -419,6 +432,9 @@ export async function start(data: SerializeFrom<typeof loader>) {
             )
             .on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
                 // show UI indicators when participant is speaking
+            })
+            .on(RoomEvent.Connected, () => {
+                getParticipants()
             })
             .on(RoomEvent.Disconnected, () => {
                 console.log('disconnected from room')
