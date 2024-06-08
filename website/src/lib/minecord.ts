@@ -35,6 +35,8 @@ export let voxelizeState: {
     events: VOXELIZE.Events
     mainCharacter: VOXELIZE.Character
     shareScreenMesh?: THREE.Mesh
+    clearUpdate?: () => void
+    isFocused: boolean
 } = {} as any
 
 export async function start(data: SerializeFrom<typeof loader>) {
@@ -347,26 +349,28 @@ export async function start(data: SerializeFrom<typeof loader>) {
         peers,
         events,
         mainCharacter,
+        isFocused: true,
+        clearUpdate: () => {},
     }
-    let clearUpdate: (() => void) | null = null
-    let isFocused = true
 
     const onVisibility = () => {
         if (document.visibilityState === 'visible') {
             console.log('visible, increasing update rate')
-            clearUpdate?.()
-            clearUpdate = null
-            isFocused = true
+            voxelizeState.isFocused = true
+            voxelizeState.clearUpdate?.()
         } else {
             console.log('not visible, decreasing update rate')
-            clearUpdate = VOXELIZE.setWorkerInterval(update, 1000 / 60)
-            isFocused = false
+            voxelizeState.clearUpdate = VOXELIZE.setWorkerInterval(
+                update,
+                1000 / 2,
+            )
+            voxelizeState.isFocused = false
         }
     }
     document.addEventListener('visibilitychange', onVisibility)
     function animate() {
         requestAnimationFrame(animate)
-        if (isFocused) {
+        if (voxelizeState.isFocused) {
             update()
         }
     }
@@ -500,7 +504,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
         mainCharacter.remove()
         room?.disconnect()
         document.removeEventListener('visibilitychange', onVisibility)
-        clearUpdate?.()
+        voxelizeState?.clearUpdate?.()
         window.removeEventListener('keydown', onVideoShareKeyPress)
     }
 }
