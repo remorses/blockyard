@@ -296,9 +296,8 @@ export async function start(data: SerializeFrom<typeof loader>) {
     /* -------------------------------------------------------------------------- */
     /*                               MAIN GAME LOOPS                              */
     /* -------------------------------------------------------------------------- */
-    function animate() {
-        requestAnimationFrame(animate)
 
+    function update() {
         // Process incoming network messages
         network.sync()
 
@@ -328,7 +327,6 @@ export async function start(data: SerializeFrom<typeof loader>) {
     const hostUserId = data?.world?.createdByUserId
     const userId = data?.userId
 
-    animate()
     network.setID(userId)
     await network.connect(
         process.env.PUBLIC_SERVER_URL || 'https://minecord-rust-server.fly.dev',
@@ -350,11 +348,34 @@ export async function start(data: SerializeFrom<typeof loader>) {
         events,
         mainCharacter,
     }
-    let roomId = cuidToUUID(worldId)
+    let clearUpdate: (() => void) | null = null
+    let isFocused = true
+
+    const onVisibility = () => {
+        if (document.visibilityState === 'visible') {
+            console.log('visible, increasing update rate')
+            clearUpdate?.()
+            clearUpdate = null
+            isFocused = true
+        } else {
+            console.log('not visible, decreasing update rate')
+            clearUpdate = VOXELIZE.setWorkerInterval(update, 1000 / 60)
+            isFocused = false
+        }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    function animate() {
+        requestAnimationFrame(animate)
+        if (isFocused) {
+            update()
+        }
+    }
+    animate()
 
     const container = document.getElementById('top-level-root')
 
     let room: Room | undefined
+
     async function startAudio() {
         const wsURL = 'wss://blockyard-dlqqsec6.livekit.cloud'
 
@@ -478,6 +499,8 @@ export async function start(data: SerializeFrom<typeof loader>) {
     return () => {
         mainCharacter.remove()
         room?.disconnect()
+        document.removeEventListener('visibilitychange', onVisibility)
+        clearUpdate?.()
         window.removeEventListener('keydown', onVideoShareKeyPress)
     }
 }
@@ -603,4 +626,3 @@ export function createOrGetShareVideo({ peerId }) {
 
     return { mesh: planeMesh, video }
 }
-

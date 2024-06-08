@@ -10,7 +10,7 @@ export const env = {
 }
 
 for (let k in env) {
-    if (k.startsWith('PUBLIC_') && !env[k]) {
+    if (k.startsWith('PUBLIC_') && env[k] == null) {
         throw new Error(`Missing env var ${k}`)
     }
 }
