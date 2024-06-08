@@ -7,10 +7,11 @@ async function main() {
         appName: 'minecord-rust-server',
         port: 4000,
         dockerfile: 'server/Dockerfile',
-        minInstances: 1,
+        minInstances: 0,
         maxInstances: 1,
         buildRemotely: true,
-        memorySize: '1gb',
+        memorySize: '2gb',
+        machineType: 'shared-cpu-2x',
         regions: ['iad'],
     })
 }
