@@ -3,6 +3,8 @@
     "scripts": {
         "deployment": "pnpm tsx scripts/deploy.ts",
         "dev": "cargo watch -w src -x \"run --release\"",
+        "build": "cargo build --release",
+        "start": "./target/release/server",
         "fly": "fly -a minecord-rust-server"
     },
     "dependencies": {
