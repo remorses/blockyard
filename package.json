@@ -7,7 +7,7 @@
         "deployment": "pnpm --sequential --stream -r deployment",
         "postinstall": "pnpm --filter voxelize proto",
         "build": "pnpm -r --filter './*' build",
-        "build:voxelize": "pnpm -r --filter './voxelize/packages/**' build",
+        "build:voxelize": "pnpm -r --filter '@voxelize/*' build",
         "server:dev": "pnpm --filter server dev",
         "release": "pnpm build && changeset"
     },

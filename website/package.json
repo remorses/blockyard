@@ -12,9 +12,7 @@
         "dev:prod": "PUBLIC_SERVER_URL=https://minecord-rust-server.fly.dev pnpm dev",
         "fly": "fly -a minecord-website ",
         "deployment": "tsx scripts/deploy.ts",
-        "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-        "start": "PORT=3467 doppler run -- remix-serve ./build/server/index.js",
-        "typecheck": "tsc"
+        "start": "PORT=3467 doppler run -- remix-serve ./build/server/index.js"
     },
     "dependencies": {
         "98.css": "^0.1.20",
