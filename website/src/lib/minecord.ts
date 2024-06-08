@@ -185,7 +185,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
         if (!voxelInteract.target) return
 
         const [x, y, z] = voxelInteract.target
-        world.updateVoxel(x, y, z, 0)
+        world.updateVoxel(x, y, z, 0, {})
     })
 
     let holdingBlockType = 1
@@ -201,7 +201,7 @@ export async function start(data: SerializeFrom<typeof loader>) {
         if (!voxelInteract.potential) return
 
         const { voxel } = voxelInteract.potential
-        world.updateVoxel(...voxel, holdingBlockType)
+        world.updateVoxel(...voxel, holdingBlockType, {})
     })
 
     // Add a character to the control
