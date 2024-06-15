@@ -4,7 +4,6 @@ FROM --platform=linux/amd64 node:18-slim
 
 WORKDIR /app
 
-# remix compiles to esm
 RUN echo "{\"type\":\"module\"}" > package.json
 
 ARG PRISMA_FILE=./build/schema.prisma
@@ -24,6 +23,8 @@ RUN npm install -g @remix-run/serve
 
 COPY ./build /app/build
 
+env PORT=3467
 
+EXPOSE $PORT
 
 CMD ["remix-serve", "./build/server/index.js"]
