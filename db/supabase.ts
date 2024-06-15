@@ -1,9 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-export function createSupabaseAdmin({
-    cacheTags = undefined as string[] | undefined,
-    revalidate = undefined as number | undefined,
-} = {}) {
+export function createSupabaseAdmin() {
     return createClient<any>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -13,26 +10,6 @@ export function createSupabaseAdmin({
                 autoRefreshToken: false,
                 detectSessionInUrl: false,
             }, //
-            global: {
-                fetch(input, init) {
-                    if (!cacheTags?.length && !revalidate) {
-                        return fetch(input, {
-                            ...init,
-                            next: {
-                                revalidate: 0,
-                            },
-                        })
-                    }
-                    return fetch(input, {
-                        ...init,
-                        next: {
-                            revalidate,
-                            tags: cacheTags,
-                        },
-                        cache: 'force-cache',
-                    })
-                },
-            },
         },
     )
 }
