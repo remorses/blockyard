@@ -41,8 +41,8 @@ importers:
         specifier: ^5.15.0
         version: 5.15.0(prisma@5.15.0)
       '@supabase/supabase-js':
-        specifier: ^2.43.1
-        version: 2.43.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+        specifier: ^2.43.4
+        version: 2.43.4(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       kysely:
         specifier: ^0.27.3
         version: 0.27.3
@@ -63,8 +63,8 @@ importers:
         specifier: ^5.15.0
         version: 5.15.0
       supabase:
-        specifier: ^1.165.0
-        version: 1.165.0
+        specifier: ^1.176.10
+        version: 1.176.10
 
   new-package-template: {}
 
@@ -505,10 +505,10 @@ importers:
         version: 2.9.2(typescript@5.4.5)
       '@supabase/ssr':
         specifier: ^0.3.0
-        version: 0.3.0(@supabase/supabase-js@2.43.1(bufferutil@4.0.8)(utf-8-validate@6.0.4))
+        version: 0.3.0(@supabase/supabase-js@2.43.4(bufferutil@4.0.8)(utf-8-validate@6.0.4))
       '@supabase/supabase-js':
-        specifier: ^2.43.1
-        version: 2.43.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+        specifier: ^2.43.4
+        version: 2.43.4(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@tailwindcss/typography':
         specifier: ^0.5.13
         version: 0.5.13(tailwindcss@3.4.3)
@@ -3891,8 +3891,8 @@ packages:
   '@supabase/storage-js@2.5.5':
     resolution: {integrity: sha512-OpLoDRjFwClwc2cjTJZG8XviTiQH4Ik8sCiMK5v7et0MDu2QlXjCAW3ljxJB5+z/KazdMOTnySi+hysxWUPu3w==}
 
-  '@supabase/supabase-js@2.43.1':
-    resolution: {integrity: sha512-A+RV50mWNtyKo6M0u4G6AOqEifQD+MoOjZcpRkPMPpEAFgMsc2dt3kBlBlR/MgZizWQgUKhsvrwKk0efc8g6Ug==}
+  '@supabase/supabase-js@2.43.4':
+    resolution: {integrity: sha512-/pLPaxiIsn5Vaz3s32HC6O/VNwfeddnzS0bZRpOW0AKcPuXroD8pT9G8mpiBlZfpKsMmq6k7tlhW7Sr1PAQ1lw==}
 
   '@swc/core-darwin-arm64@1.5.7':
     resolution: {integrity: sha512-bZLVHPTpH3h6yhwVl395k0Mtx8v6CGhq5r4KQdAoPbADU974Mauz1b6ViHAJ74O0IVE5vyy7tD3OpkQxL/vMDQ==}
@@ -10342,8 +10342,8 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     hasBin: true
 
-  supabase@1.165.0:
-    resolution: {integrity: sha512-bN1TSR6p4POxCQqb3OsO6vo2H9yKIUB2HW44SiLAV9leBIjdm4AsrJJ1hmc/YecqjtuBooAr7RXz/uGKQEQbEQ==}
+  supabase@1.176.10:
+    resolution: {integrity: sha512-VS+dRcNk7H2+qG4hCz2WqSKFeZxrMZ0k+LQnHiUX+d9bls1QyZvpXj3qmo4Hs30VS6ZYRQ3sgNVE2tEKWv6kcA==}
     engines: {npm: '>=8'}
     hasBin: true
 
@@ -10417,8 +10417,8 @@ packages:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
 
-  tar@7.0.1:
-    resolution: {integrity: sha512-IjMhdQMZFpKsHEQT3woZVxBtCQY+0wk3CVxdRkGXEgyGa0dNS/ehPvOMr2nmfC7x5Zj2N+l6yZUpmICjLGS35w==}
+  tar@7.2.0:
+    resolution: {integrity: sha512-hctwP0Nb4AB60bj8WQgRYaMOuJYRAPMGiQUAotms5igN8ppfQM+IvjQ5HcKu1MaZh2Wy2KWVTe563Yj8dfc14w==}
     engines: {node: '>=18'}
 
   temp-dir@1.0.0:
@@ -13207,7 +13207,7 @@ snapshots:
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
-      minipass: 7.1.1
+      minipass: 7.1.2
 
   '@isaacs/string-locale-compare@1.1.0': {}
 
@@ -15899,9 +15899,9 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@supabase/ssr@0.3.0(@supabase/supabase-js@2.43.1(bufferutil@4.0.8)(utf-8-validate@6.0.4))':
+  '@supabase/ssr@0.3.0(@supabase/supabase-js@2.43.4(bufferutil@4.0.8)(utf-8-validate@6.0.4))':
     dependencies:
-      '@supabase/supabase-js': 2.43.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      '@supabase/supabase-js': 2.43.4(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       cookie: 0.5.0
       ramda: 0.29.1
 
@@ -15909,7 +15909,7 @@ snapshots:
     dependencies:
       '@supabase/node-fetch': 2.6.15
 
-  '@supabase/supabase-js@2.43.1(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
+  '@supabase/supabase-js@2.43.4(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
     dependencies:
       '@supabase/auth-js': 2.64.2
       '@supabase/functions-js': 2.3.1
@@ -20018,7 +20018,7 @@ snapshots:
   https-proxy-agent@7.0.4:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.4
+      debug: 4.3.5
     transitivePeerDependencies:
       - supports-color
 
@@ -21518,7 +21518,7 @@ snapshots:
 
   minizlib@3.0.1:
     dependencies:
-      minipass: 7.1.1
+      minipass: 7.1.2
       rimraf: 5.0.7
 
   mitt@3.0.0: {}
@@ -23817,12 +23817,12 @@ snapshots:
       pirates: 4.0.6
       ts-interface-checker: 0.1.13
 
-  supabase@1.165.0:
+  supabase@1.176.10:
     dependencies:
       bin-links: 4.0.4
       https-proxy-agent: 7.0.4
       node-fetch: 3.3.2
-      tar: 7.0.1
+      tar: 7.2.0
     transitivePeerDependencies:
       - supports-color
 
@@ -23940,11 +23940,11 @@ snapshots:
       mkdirp: 1.0.4
       yallist: 4.0.0
 
-  tar@7.0.1:
+  tar@7.2.0:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
-      minipass: 5.0.0
+      minipass: 7.1.2
       minizlib: 3.0.1
       mkdirp: 3.0.1
       yallist: 5.0.0

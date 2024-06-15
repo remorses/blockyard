@@ -27,7 +27,7 @@
         "@remix-run/react": "^2.9.2",
         "@remix-run/serve": "^2.9.2",
         "@supabase/ssr": "^0.3.0",
-        "@supabase/supabase-js": "^2.43.1",
+        "@supabase/supabase-js": "^2.43.4",
         "@tailwindcss/typography": "^0.5.13",
         "@types/simple-peer": "^9.11.8",
         "@types/three": "^0.165.0",
