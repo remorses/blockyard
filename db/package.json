@@ -24,16 +24,16 @@
     "author": "remorses <beats.by.morse@gmail.com>",
     "license": "ISC",
     "dependencies": {
-        "@prisma/client": "^5.13.0",
+        "@prisma/client": "^5.15.0",
         "@supabase/supabase-js": "^2.43.1",
         "kysely": "^0.27.3",
         "pg": "^8.11.3",
         "postgres": "^3.3.4"
     },
     "devDependencies": {
-        "prisma": "^5.13.0",
-        "kysely-codegen": "^0.15.0",
         "@types/node": "^20.11.13",
+        "kysely-codegen": "^0.15.0",
+        "prisma": "^5.15.0",
         "supabase": "^1.165.0"
     }
 }
