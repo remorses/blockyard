@@ -8,6 +8,7 @@ import { Windows95Provider } from '~/components/95'
 import { env } from '~/lib/env'
 import { SupabaseOutletContext } from '~/lib/supabase'
 import { getSupabaseWithSessionHeaders } from '~/lib/supabase.server'
+import { loginRedirectUrl } from '../lib/utils'
 
 export let loader = async ({ request }: LoaderFunctionArgs) => {
     const { headers, session } = await getSupabaseWithSessionHeaders({
@@ -34,15 +35,13 @@ export function LoginWithGoogle() {
 
     const [searchParams] = useSearchParams()
     const handleSignIn = async () => {
-        const u = new URL('/api/auth/callback', env.PUBLIC_URL)
-        if (searchParams.get('next')) {
-            u.searchParams.set('next', searchParams.get('next'))
-        }
+        const redirectTo = loginRedirectUrl({ next: searchParams.get('next') })
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
 
             options: {
-                redirectTo: u.toString(),
+                redirectTo,
             },
         })
 

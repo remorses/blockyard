@@ -4,6 +4,14 @@ export function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+export function loginRedirectUrl({ next = '' }) {
+    const u = new URL('/api/auth/callback', env.PUBLIC_URL)
+    if (next) {
+        u.searchParams.set('next', next)
+    }
+    return u.toString()
+}
+
 export function getWorldUrl({ worldId }) {
     return new URL(`/world/${worldId}`, env.PUBLIC_URL).toString()
 }
