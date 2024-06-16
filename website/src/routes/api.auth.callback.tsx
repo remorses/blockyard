@@ -1,5 +1,5 @@
 import { redirect, type LoaderFunctionArgs } from '@remix-run/node'
-import { getSupabaseWithHeaders } from '~/lib/supabase.server'
+import { getSupabaseWithHeaders } from '../lib/supabase.server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const requestUrl = new URL(request.url)
@@ -12,8 +12,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
         })
 
         const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-        console.log('Error: auth callback ', error)
 
         if (error) {
             console.log('Error: auth callback ', error)

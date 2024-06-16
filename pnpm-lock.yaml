@@ -53,6 +53,9 @@ importers:
       '@types/node':
         specifier: ^20.11.13
         version: 20.12.11
+      concurrently:
+        specifier: ^7.6.0
+        version: 7.6.0
       kysely-codegen:
         specifier: ^0.15.0
         version: 0.15.0(kysely@0.27.3)(pg@8.11.5)
@@ -18031,7 +18034,7 @@ snapshots:
 
   date-fns@2.30.0:
     dependencies:
-      '@babel/runtime': 7.24.4
+      '@babel/runtime': 7.24.7
 
   dateformat@3.0.3: {}
 
@@ -20406,7 +20409,7 @@ snapshots:
   jake@10.9.1:
     dependencies:
       async: 3.2.5
-      chalk: 4.1.0
+      chalk: 4.1.2
       filelist: 1.0.4
       minimatch: 3.1.2
 
@@ -23242,7 +23245,7 @@ snapshots:
 
   rxjs@7.8.1:
     dependencies:
-      tslib: 2.6.2
+      tslib: 2.6.3
 
   sade@1.8.1:
     dependencies:
